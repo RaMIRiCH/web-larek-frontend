@@ -1,3 +1,5 @@
+import { IProduct } from "../../types";
+
 export type ApiListResponse<Type> = {
     total: number,
     items: Type[]
@@ -38,5 +40,9 @@ export class Api {
             method,
             body: JSON.stringify(data)
         }).then(this.handleResponse);
+    }
+
+    getProductById(productId: string): Promise<IProduct> {
+        return this.get(`/products/${productId}`) as Promise<IProduct>;
     }
 }
