@@ -1,86 +1,140 @@
+/* eslint-disable @typescript-eslint/no-inferrable-types */
 import { IOrderForm } from '../types';
 import { openModal } from './Modal';
 
 export class OrderView {
   private form: HTMLFormElement;
   private addressInput: HTMLInputElement;
-  private paymentButtons: NodeListOf<HTMLButtonElement>;
-  private selectedPayment = '';
+  private paymentButtons: HTMLButtonElement[];
+  private selectedPayment: string = '';
   private nextButton: HTMLButtonElement;
 
-  constructor(container: HTMLElement) {
-    this.form = container.querySelector('form')!;
-    this.addressInput = container.querySelector('input[name="address"]')!;
-    this.paymentButtons = container.querySelectorAll('button[name="card"], button[name="cash"]');
-    this.nextButton = container.querySelector('button[type="submit"]')!;
+  constructor(private container: HTMLElement) {
+    this.selectedPayment = '';
+    this.validateContainer();
+    
+    this.form = this.getElement<HTMLFormElement>('form[name="order"]', 'FORM_NOT_FOUND');
+    this.addressInput = this.getElement<HTMLInputElement>('input[name="address"]', 'ADDRESS_INPUT_NOT_FOUND');
+    this.paymentButtons = Array.from(this.container.querySelectorAll<HTMLButtonElement>(
+      'button[name="card"], button[name="cash"]'
+    ));
+    this.nextButton = this.getElement<HTMLButtonElement>('button.order__button', 'SUBMIT_BUTTON_NOT_FOUND');
 
-    this.nextButton.disabled = true;
-
-    this.paymentButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        this.selectedPayment = button.name;
-        this.updatePaymentButtons();
-        this.validateForm();
-      });
-    });
-
-    this.addressInput.addEventListener('input', () => {
-      this.validateForm();
-    });
+    this.validateElements();
+    this.initializeEventListeners();
   }
 
-  private updatePaymentButtons() {
-    this.paymentButtons.forEach(button => {
-      if (button.name === this.selectedPayment) {
-        button.classList.add('button_selected');
-      } else {
-        button.classList.remove('button_selected');
-      }
-    });
+  private validateContainer(): void {
+    if (!(this.container instanceof HTMLElement)) {
+      throw new Error('INVALID_CONTAINER_TYPE');
+    }
+    if (this.container.children.length === 0) {
+      console.warn('CONTAINER_IS_EMPTY', this.container);
+    }
   }
 
-  get formData(): IOrderForm {
+  private getElement<T extends HTMLElement>(selector: string, errorCode: string): T {
+    const element = this.container.querySelector<T>(selector);
+    if (!element) {
+      throw new Error(`${errorCode}: ${selector}`);
+    }
+    return element;
+  }
+
+  private validateElements(): void {
+    const checks = {
+      FORM_ELEMENTS: this.form.elements.length > 0,
+      PAYMENT_BUTTONS: this.paymentButtons.length >= 2,
+    };
+
+    if (!checks.FORM_ELEMENTS || !checks.PAYMENT_BUTTONS) {
+      console.error('VALIDATION_FAILED:', checks);
+      throw new Error('FORM_VALIDATION_FAILED');
+    }
+  }
+
+  private initializeEventListeners(): void {
+    this.paymentButtons.forEach(button => {
+      button.addEventListener('click', () => this.handlePaymentSelect(button));
+    });
+
+    this.addressInput.addEventListener('input', () => this.handleAddressInput());
+    this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+
+    this.updateFormState();
+  }
+
+  private handlePaymentSelect(button: HTMLButtonElement): void {
+    this.selectedPayment = button.name;
+    this.paymentButtons.forEach(btn => 
+      btn.classList.toggle('button_selected', btn === button)
+    );
+    this.updateFormState();
+  }
+
+  private handleAddressInput(): void {
+    this.updateFormState();
+  }
+
+  private updateFormState(): void {
+    const isAddressValid = this.addressInput.value.trim().length > 5;
+    const isPaymentSelected = !!this.selectedPayment;
+    
+    this.nextButton.disabled = !(isAddressValid && isPaymentSelected);
+  }
+
+  private handleSubmit(event: SubmitEvent): void {
+    event.preventDefault();
+    
+    if (this.nextButton.disabled) {
+      this.showValidationErrors();
+      return;
+    }
+
+    const formData = this.getFormData();
+    this.onSubmitCallback(formData);
+  }
+
+  private showValidationErrors(): void {
+    const errors: string[] = [];
+    
+    if (!this.addressInput.value.trim()) {
+      errors.push('Адрес доставки обязателен');
+    }
+    
+    if (!this.selectedPayment) {
+      errors.push('Выберите способ оплаты');
+    }
+
+    alert(`Ошибки:\n${errors.join('\n')}`);
+  }
+
+  getFormData(): IOrderForm {
     return {
-      address: this.addressInput.value,
+      address: this.addressInput.value.trim(),
       payment: this.selectedPayment,
       email: '',
       phone: '',
     };
   }
 
-  validateForm() {
-    const isValid = this.addressInput.value.trim() !== '' && this.selectedPayment !== '';
-    this.nextButton.disabled = !isValid;
-  }
+  private onSubmitCallback: (data: IOrderForm) => void = () => {};
 
   set onFormSubmit(callback: (data: IOrderForm) => void) {
-    this.form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (!this.nextButton.disabled) {
-        callback(this.formData);
-      } else {
-        this.form.reportValidity();
-      }
-    });
+    this.onSubmitCallback = callback;
   }
 
   public showSuccessModal(totalPrice: number): void {
     const modal = document.getElementById('modal-container')!;
-    const content = modal.querySelector('.modal__content')!;
     const template = document.getElementById('success') as HTMLTemplateElement;
-
-    const success = template.content.cloneNode(true) as HTMLElement;
-    const description = success.querySelector('.order-success__description')!;
-    const closeButton = success.querySelector('.order-success__close') as HTMLButtonElement;
-
+    
+    modal.innerHTML = '';
+    const content = template.content.cloneNode(true) as DocumentFragment;
+    const description = content.querySelector('.order-success__description')!;
+    
     description.textContent = `Списано ${totalPrice} синапсов`;
-
-    closeButton.addEventListener('click', () => {
-      modal.classList.remove('modal_active');
-    });
-
-    content.innerHTML = '';
-    content.append(success);
+    modal.appendChild(content);
+    
     openModal(modal);
   }
 }

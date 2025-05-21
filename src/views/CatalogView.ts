@@ -1,4 +1,5 @@
 import { IProduct } from '../types';
+import { CDN_URL } from '../utils/constants';
 
 export class CatalogView {
   private container: HTMLElement;
@@ -34,7 +35,7 @@ export class CatalogView {
     if (titleElem) titleElem.textContent = product.title;
 
     const imageElem = cardElement.querySelector('.card__image') as HTMLImageElement;
-    if (imageElem) imageElem.src = product.image;
+    if (imageElem) imageElem.src = `${CDN_URL}${product.image}`;
 
     const priceElem = cardElement.querySelector('.card__price') as HTMLElement;
     if (priceElem) priceElem.textContent =

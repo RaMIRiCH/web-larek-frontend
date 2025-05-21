@@ -25,10 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const basketModel = new BasketModel();
   const basketRoot = document.createElement('div');
   const orderRoot = document.createElement('div');
+  const orderTemplate = document.getElementById('order') as HTMLTemplateElement;
 
+  const orderContent = orderTemplate.content.cloneNode(true) as DocumentFragment;
+  orderRoot.appendChild(orderContent);
+  const orderView = new OrderView(orderRoot);
   const basketTemplate = document.querySelector('#basket') as HTMLTemplateElement;
   const basketView = new BasketView(basketTemplate);
-  const orderView = new OrderView(orderRoot);
 
   const basketPresenter = new BasketPresenter(basketModel, basketView, modalContainer);
   const orderPresenter = new OrderPresenter(orderView, basketModel);

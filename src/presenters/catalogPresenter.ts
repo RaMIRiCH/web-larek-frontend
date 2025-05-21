@@ -20,7 +20,7 @@ export class CatalogPresenter {
 
   async init() {
   try {
-    const response = await this.api.get('/products');
+    const response = await this.api.get('/product/');
     const products = (response as ApiListResponse<IProduct>).items;
     this.view.renderItems(products, (productId: string) => {
       this.productModalPresenter.show(productId);
