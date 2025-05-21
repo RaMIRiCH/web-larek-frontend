@@ -36,17 +36,20 @@ export class ProductModalPresenter {
 
   private openModal() {
     this.modalContainer.classList.add('modal_active');
+    document.body.classList.add('no-scroll');
   }
 
   private closeModal = () => {
     this.modalContainer.classList.remove('modal_active');
+    document.body.classList.remove('no-scroll');
     this.modalContainer.innerHTML = '';
     this.modalContainer.removeEventListener('click', this.onOutsideClick);
     document.removeEventListener('keydown', this.onEscPress);
   };
 
   private onOutsideClick = (e: MouseEvent) => {
-    if (e.target === this.modalContainer) {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains('modal')) {
       this.closeModal();
     }
   };

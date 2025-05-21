@@ -43,6 +43,6 @@ export class Api {
     }
 
     getProductById(productId: string): Promise<IProduct> {
-        return this.get(`/products/${productId}`) as Promise<IProduct>;
+        return this.get(`/product/${productId}`) as Promise<IProduct>;
     }
 }

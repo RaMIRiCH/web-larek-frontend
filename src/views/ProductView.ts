@@ -1,5 +1,6 @@
 import { IProduct } from '../types';
 import { openModal } from './Modal';
+import { CDN_URL } from '../utils/constants';
 
 export class ProductView {
   private modal: HTMLElement;
