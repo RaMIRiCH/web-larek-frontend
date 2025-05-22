@@ -8,6 +8,7 @@ export class BasketPresenter {
     private view: BasketView,
     private modalElement: HTMLElement
   ) {
+    this.modalElement.appendChild(this.view.element);
     this.view.setCallbacks({
       onRemoveItem: this.handleRemoveItem,
       onSubmit: this.handleSubmit,

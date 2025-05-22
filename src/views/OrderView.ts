@@ -1,140 +1,99 @@
-/* eslint-disable @typescript-eslint/no-inferrable-types */
 import { IOrderForm } from '../types';
-import { openModal } from './Modal';
+import { openModal, closeModal } from './Modal';
 
 export class OrderView {
-  private form: HTMLFormElement;
-  private addressInput: HTMLInputElement;
-  private paymentButtons: HTMLButtonElement[];
-  private selectedPayment: string = '';
-  private nextButton: HTMLButtonElement;
+  private template: HTMLTemplateElement;
+  private container: HTMLElement;
+  private form!: HTMLFormElement;
+  private addressInput!: HTMLInputElement;
+  private paymentButtons!: HTMLButtonElement[];
+  private nextButton!: HTMLButtonElement;
+  private onSubmitCallback: (data: IOrderForm) => void = () => {};
 
-  constructor(private container: HTMLElement) {
-    this.selectedPayment = '';
-    this.validateContainer();
-    
-    this.form = this.getElement<HTMLFormElement>('form[name="order"]', 'FORM_NOT_FOUND');
-    this.addressInput = this.getElement<HTMLInputElement>('input[name="address"]', 'ADDRESS_INPUT_NOT_FOUND');
-    this.paymentButtons = Array.from(this.container.querySelectorAll<HTMLButtonElement>(
-      'button[name="card"], button[name="cash"]'
-    ));
-    this.nextButton = this.getElement<HTMLButtonElement>('button.order__button', 'SUBMIT_BUTTON_NOT_FOUND');
-
-    this.validateElements();
-    this.initializeEventListeners();
+  constructor(template: HTMLTemplateElement) {
+    this.template = template;
+    this.container = document.createElement('div');
+    this.container.className = 'modal';
   }
 
-  private validateContainer(): void {
-    if (!(this.container instanceof HTMLElement)) {
-      throw new Error('INVALID_CONTAINER_TYPE');
-    }
-    if (this.container.children.length === 0) {
-      console.warn('CONTAINER_IS_EMPTY', this.container);
-    }
-  }
+  public render(): void {
+    const content = this.template.content.cloneNode(true) as DocumentFragment;
 
-  private getElement<T extends HTMLElement>(selector: string, errorCode: string): T {
-    const element = this.container.querySelector<T>(selector);
-    if (!element) {
-      throw new Error(`${errorCode}: ${selector}`);
-    }
-    return element;
-  }
+    this.container.innerHTML = `
+      <div class="modal__container">
+        <button class="modal__close" aria-label="Закрыть"></button>
+        <div class="modal__content"></div>
+      </div>
+    `;
+    const contentEl = this.container.querySelector('.modal__content')!;
+    contentEl.appendChild(content);
 
-  private validateElements(): void {
-    const checks = {
-      FORM_ELEMENTS: this.form.elements.length > 0,
-      PAYMENT_BUTTONS: this.paymentButtons.length >= 2,
-    };
-
-    if (!checks.FORM_ELEMENTS || !checks.PAYMENT_BUTTONS) {
-      console.error('VALIDATION_FAILED:', checks);
-      throw new Error('FORM_VALIDATION_FAILED');
-    }
-  }
-
-  private initializeEventListeners(): void {
-    this.paymentButtons.forEach(button => {
-      button.addEventListener('click', () => this.handlePaymentSelect(button));
-    });
-
-    this.addressInput.addEventListener('input', () => this.handleAddressInput());
-    this.form.addEventListener('submit', (e) => this.handleSubmit(e));
-
-    this.updateFormState();
-  }
-
-  private handlePaymentSelect(button: HTMLButtonElement): void {
-    this.selectedPayment = button.name;
-    this.paymentButtons.forEach(btn => 
-      btn.classList.toggle('button_selected', btn === button)
+    this.form = this.container.querySelector<HTMLFormElement>('form[name="order"]')!;
+    this.addressInput = this.container.querySelector<HTMLInputElement>('input[name="address"]')!;
+    this.paymentButtons = Array.from(
+      this.container.querySelectorAll<HTMLButtonElement>('button[name="card"], button[name="cash"]')
     );
-    this.updateFormState();
+    this.nextButton = this.container.querySelector<HTMLButtonElement>('button.order__button')!;
+
+    this.initListeners();
   }
 
-  private handleAddressInput(): void {
+  public open(): void {
+    openModal(this.container);
+  }
+
+  public close(): void {
+    closeModal(this.container);
+  }
+
+  private initListeners(): void {
+    this.paymentButtons.forEach(btn =>
+      btn.addEventListener('click', () => {
+        this.paymentButtons.forEach(b => b.classList.toggle('button_selected', b === btn));
+        (this as any).selectedPayment = btn.name;
+        this.updateFormState();
+      })
+    );
+    this.addressInput.addEventListener('input', () => this.updateFormState());
+    this.form.addEventListener('submit', e => this.handleSubmit(e));
+    this.container.querySelector('.modal__close')!
+      .addEventListener('click', () => this.close());
     this.updateFormState();
   }
 
   private updateFormState(): void {
-    const isAddressValid = this.addressInput.value.trim().length > 5;
-    const isPaymentSelected = !!this.selectedPayment;
-    
-    this.nextButton.disabled = !(isAddressValid && isPaymentSelected);
+    const validAddr = this.addressInput.value.trim().length > 5;
+    const paymentSel = !!(this as any).selectedPayment;
+    this.nextButton.disabled = !(validAddr && paymentSel);
   }
 
   private handleSubmit(event: SubmitEvent): void {
     event.preventDefault();
-    
     if (this.nextButton.disabled) {
-      this.showValidationErrors();
+      alert('Проверьте данные');
       return;
     }
-
-    const formData = this.getFormData();
-    this.onSubmitCallback(formData);
-  }
-
-  private showValidationErrors(): void {
-    const errors: string[] = [];
-    
-    if (!this.addressInput.value.trim()) {
-      errors.push('Адрес доставки обязателен');
-    }
-    
-    if (!this.selectedPayment) {
-      errors.push('Выберите способ оплаты');
-    }
-
-    alert(`Ошибки:\n${errors.join('\n')}`);
-  }
-
-  getFormData(): IOrderForm {
-    return {
+    const data: IOrderForm = {
       address: this.addressInput.value.trim(),
-      payment: this.selectedPayment,
+      payment: (this as any).selectedPayment,
       email: '',
       phone: '',
     };
+    this.onSubmitCallback(data);
   }
 
-  private onSubmitCallback: (data: IOrderForm) => void = () => {};
-
-  set onFormSubmit(callback: (data: IOrderForm) => void) {
-    this.onSubmitCallback = callback;
+  set onFormSubmit(cb: (data: IOrderForm) => void) {
+    this.onSubmitCallback = cb;
   }
 
   public showSuccessModal(totalPrice: number): void {
     const modal = document.getElementById('modal-container')!;
     const template = document.getElementById('success') as HTMLTemplateElement;
-    
     modal.innerHTML = '';
     const content = template.content.cloneNode(true) as DocumentFragment;
-    const description = content.querySelector('.order-success__description')!;
-    
-    description.textContent = `Списано ${totalPrice} синапсов`;
+    content.querySelector('.order-success__description')!
+      .textContent = `Списано ${totalPrice} синапсов`;
     modal.appendChild(content);
-    
     openModal(modal);
   }
 }
