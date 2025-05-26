@@ -1,4 +1,5 @@
 import { Product } from "../models/Product";
+import { openModal,closeModal } from "./Modal";
 
 export type BasketViewCallbacks = {
   onRemoveItem?: (productId: string) => void;
@@ -32,27 +33,56 @@ export class BasketView {
     this.submitButton = this.container.querySelector('.basket__button')!;
     this.closeButton = this.container.querySelector('.modal__close')!;
 
-    this.submitButton.addEventListener('click', () => this.callbacks.onSubmit?.());
     this.closeButton.addEventListener('click', () => this.close());
+    this.submitButton.addEventListener('click', () => this.callbacks.onSubmit?.());
+  }
+
+  public open(): void {
+    document.body.appendChild(this.container);
+    openModal(this.container);
+  }
+
+  public close(): void {
+    closeModal(this.container);
+    this.container.remove();
+  }
+
+  renderCounter(count: number) {
+    const counter = document.querySelector('.header__basket-counter') as HTMLElement;
+    if (counter) {
+      counter.textContent = String(count);
+      counter.classList.toggle('hidden', count === 0);
+    }
   }
 
   renderItems(items: Product[]): void {
-    this.listElement.innerHTML = items
-      .map(
-        (item, index) => `
-          <li class="basket__item card card_compact">
-            <span class="basket__item-index">${index + 1}</span>
-            <span class="card__title">${item.title}</span>
-            <span class="card__price">${item.formattedPrice}</span>
-            <button 
-              class="basket__item-delete" 
-              data-id="${item.id}" 
-              aria-label="Удалить"
-            ></button>
-          </li>
-        `
-      )
-      .join('');
+    if (items.length === 0) {
+    this.listElement.innerHTML = `<li class="basket__empty">Корзина пуста</li>`;
+    this.submitButton.disabled = true;
+    this.totalElement.textContent = `0 синапсов`;
+    return;
+  }
+
+  this.submitButton.disabled = false;
+  this.listElement.innerHTML = items
+    .map(
+      (item, index) => `
+        <li class="basket__item card card_compact">
+          <span class="basket__item-index">${index + 1}</span>
+          <span class="card__title">${item.title}</span>
+          <span class="card__price">${item.formattedPrice}</span>
+          <button 
+            class="basket__item-delete" 
+            data-id="${item.id}" 
+            aria-label="Удалить"
+          ></button>
+        </li>
+      `
+    )
+    .join('');
+
+  this.totalElement.textContent = `${items
+    .reduce((sum, item) => sum + item.price, 0)} синапсов`;
 
     this.listElement.querySelectorAll('.basket__item-delete').forEach(button => {
       button.addEventListener('click', () => {
@@ -72,9 +102,5 @@ export class BasketView {
 
   get element(): HTMLElement {
     return this.container;
-  }
-
-  private close(): void {
-    this.container.remove();
   }
 }

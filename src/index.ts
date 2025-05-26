@@ -11,23 +11,23 @@ import { OrderPresenter } from './presenters/orderPresenter';
 import { ProductModalView } from './views/ProductModalView';
 import { ProductModalPresenter } from './presenters/ProductModalPresenter';
 import { API_URL } from './utils/constants';
+import { initModalCloseHandlers } from './views/Modal';
 
 document.addEventListener('DOMContentLoaded', () => {
+  initModalCloseHandlers();
+
   const api = new Api(API_URL);
 
   const catalogContainer = document.querySelector('.gallery')! as HTMLElement;
   const modalContainer = document.getElementById('modal-container')!;
 
+  const basketModel = new BasketModel();
+   const basketTemplate = document.querySelector('#basket')! as HTMLTemplateElement;
+  const basketView = new BasketView(basketTemplate);
+  const basketPresenter = new BasketPresenter(basketModel, basketView);
   const catalogView = new CatalogView(catalogContainer);
   const productModalView = new ProductModalView(modalContainer);
-  const productModalPresenter = new ProductModalPresenter(productModalView, api, modalContainer);
-  
-  const basketModel = new BasketModel();
-
-  const basketTemplate = document.querySelector('#basket')! as HTMLTemplateElement;
-  const basketView = new BasketView(basketTemplate);
-  const basketPresenter = new BasketPresenter(basketModel, basketView, modalContainer);
-
+  const productModalPresenter = new ProductModalPresenter(productModalView, api, modalContainer, basketModel, basketPresenter);
   const orderTemplate = document.getElementById('order')! as HTMLTemplateElement;
   const orderView = new OrderView(orderTemplate);
   const orderPresenter = new OrderPresenter(orderView, basketModel, api);
@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.addEventListener('order:start', () => {
+    console.log('[DEBUG] order:start received');
     orderPresenter.startOrderProcess();
   });
 });

@@ -1,23 +1,24 @@
 import { BasketModel } from '../models/Basket';
 import { BasketView } from '../views/BasketView';
-import { openModal, closeModal } from '../views/Modal';
 
 export class BasketPresenter {
   constructor(
     private model: BasketModel,
-    private view: BasketView,
-    private modalElement: HTMLElement
+    private view: BasketView
   ) {
-    this.modalElement.appendChild(this.view.element);
     this.view.setCallbacks({
       onRemoveItem: this.handleRemoveItem,
       onSubmit: this.handleSubmit,
     });
   }
 
-  open(): void {
+  updateCounter() {
+  this.view.renderCounter(this.model.getItems().length);
+}
+
+  public open(): void {
     this.updateView();
-    openModal(this.modalElement);
+    this.view.open();
   }
 
   private updateView(): void {
@@ -28,10 +29,11 @@ export class BasketPresenter {
   private handleRemoveItem = (productId: string): void => {
     this.model.removeItem(productId);
     this.updateView();
+    this.updateCounter();
   };
 
   private handleSubmit = (): void => {
-    closeModal(this.modalElement);
+    this.view.close();
     document.dispatchEvent(new CustomEvent('order:start'));
   };
 }

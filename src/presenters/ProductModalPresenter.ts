@@ -1,17 +1,29 @@
 import { ProductModalView } from '../views/ProductModalView';
 import { Api } from '../components/base/api';
 import { Product } from '../models/Product';
+import { BasketModel } from '../models/Basket';
+import { BasketPresenter } from './basketPresenter';
 
 export class ProductModalPresenter {
   private view: ProductModalView;
   private api: Api;
   private modalContainer: HTMLElement;
+  private basketModel: BasketModel;
+  private basketPresenter: BasketPresenter;
 
-  constructor(view: ProductModalView, api: Api, modalContainer: HTMLElement) {
-    this.view = view;
-    this.api = api;
-    this.modalContainer = modalContainer;
-  }
+  constructor(
+  view: ProductModalView,
+  api: Api,
+  modalContainer: HTMLElement,
+  basketModel: BasketModel,
+  basketPresenter: BasketPresenter
+) {
+  this.view = view;
+  this.api = api;
+  this.modalContainer = modalContainer;
+  this.basketModel = basketModel;
+  this.basketPresenter = basketPresenter;
+}
 
   async show(productId: string) {
     try {
@@ -24,9 +36,18 @@ export class ProductModalPresenter {
         productData.category,
         productData.price
       );
+
       this.view.render(product);
       this.openModal();
+
       this.view.bindClose(() => this.closeModal());
+
+      this.view.bindAddToBasket(() => {
+        this.basketModel.addItem(product);
+        this.basketPresenter.updateCounter();
+        this.closeModal();
+      });
+
       this.modalContainer.addEventListener('click', this.onOutsideClick);
       document.addEventListener('keydown', this.onEscPress);
     } catch (err) {
@@ -48,8 +69,7 @@ export class ProductModalPresenter {
   };
 
   private onOutsideClick = (e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.classList.contains('modal')) {
+    if ((e.target as HTMLElement).classList.contains('modal')) {
       this.closeModal();
     }
   };

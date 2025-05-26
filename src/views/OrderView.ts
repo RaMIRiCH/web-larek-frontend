@@ -28,6 +28,8 @@ export class OrderView {
     const contentEl = this.container.querySelector('.modal__content')!;
     contentEl.appendChild(content);
 
+    document.body.appendChild(this.container);
+
     this.form = this.container.querySelector<HTMLFormElement>('form[name="order"]')!;
     this.addressInput = this.container.querySelector<HTMLInputElement>('input[name="address"]')!;
     this.paymentButtons = Array.from(
@@ -49,7 +51,7 @@ export class OrderView {
   private initListeners(): void {
     this.paymentButtons.forEach(btn =>
       btn.addEventListener('click', () => {
-        this.paymentButtons.forEach(b => b.classList.toggle('button_selected', b === btn));
+        this.paymentButtons.forEach(b => b.classList.toggle('button_alt-active', b === btn));
         (this as any).selectedPayment = btn.name;
         this.updateFormState();
       })
