@@ -3,41 +3,68 @@ import { CDN_URL } from '../utils/constants';
 
 export class ProductModalView {
   private container: HTMLElement;
+  private template: HTMLTemplateElement;
   private closeBtn: HTMLButtonElement | null = null;
   private addButton: HTMLButtonElement | null = null;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, template: HTMLTemplateElement) {
     this.container = container;
+    this.template = template;
   }
 
   render(product: IProduct): void {
-    const imageUrl = `${CDN_URL}${product.image}`;
-    this.container.classList.add('modal', 'modal_active');
+    const content = this.container.querySelector('.modal__content');
+    if (!content) {
+      console.error('Не найдена .modal__content в модалке');
+      return;
+    }
+    content.innerHTML = '';
 
-    this.container.innerHTML = `
-      <div class="modal__container">
-        <button class="modal__close" aria-label="Закрыть"></button>
-        <div class="modal__content">
-          <div class="card card_full">
-            <img class="card__image" src="${imageUrl}" alt="${product.title}" />
-            <div class="card__column">
-              <span class="card__category card__category">${product.category}</span>
-              <h2 class="card__title">${product.title}</h2>
-              <p class="card__text">${product.description}</p>
-              <div class="card__row">
-                <button class="button" data-id="${product.id}">В корзину</button>
-                <span class="card__price">
-                  ${product.price !== null ? product.price + ' синапсов' : 'Бесценно'}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+    const cardFragment = this.template.content.cloneNode(true) as HTMLElement;
+
+    const card = cardFragment.querySelector('.card') as HTMLElement;
+    const image = card.querySelector('.card__image') as HTMLImageElement;
+    const category = card.querySelector('.card__category') as HTMLElement;
+    const title = card.querySelector('.card__title') as HTMLElement;
+    const description = card.querySelector('.card__text') as HTMLElement;
+    const price = card.querySelector('.card__price') as HTMLElement;
+    this.addButton = card.querySelector('.button') as HTMLButtonElement;
+
+    image.src = `${CDN_URL}${product.image}`;
+    image.alt = product.title;
+
+    category.classList.forEach(className => {
+      if (className.startsWith('card__category_')) {
+        category.classList.remove(className);
+      }
+    });
+
+    if (!category.classList.contains('card__category')) {
+      category.classList.add('card__category');
+    }
+
+    const categoryMap: Record<string, string> = {
+      'софт-скил': 'soft',
+      'хард-скил': 'hard',
+      'другое': 'other',
+      'кнопка': 'button',
+      'дополнительное': 'additional'
+    };
+
+    const categoryRaw = product.category.toLowerCase();
+    const modifier = categoryMap[categoryRaw] ?? 'other';
+    category.classList.add(`card__category_${modifier}`);
+    category.textContent = product.category;
+
+    title.textContent = product.title;
+    description.textContent = product.description;
+    price.textContent = product.price !== null ? `${product.price} синапсов` : 'Бесценно';
+
+    this.addButton.dataset.id = product.id;
+
+    content.appendChild(cardFragment);
 
     this.closeBtn = this.container.querySelector('.modal__close');
-    this.addButton = this.container.querySelector('.button');
   }
 
   bindClose(handler: () => void): void {

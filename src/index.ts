@@ -22,11 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalContainer = document.getElementById('modal-container')!;
 
   const basketModel = new BasketModel();
-   const basketTemplate = document.querySelector('#basket')! as HTMLTemplateElement;
+  const basketTemplate = document.querySelector('#basket')! as HTMLTemplateElement;
   const basketView = new BasketView(basketTemplate);
   const basketPresenter = new BasketPresenter(basketModel, basketView);
   const catalogView = new CatalogView(catalogContainer);
-  const productModalView = new ProductModalView(modalContainer);
+  const cardPreviewTemplate = document.getElementById('card-preview') as HTMLTemplateElement;
+  const productModalView = new ProductModalView(modalContainer, cardPreviewTemplate);
   const productModalPresenter = new ProductModalPresenter(productModalView, api, modalContainer, basketModel, basketPresenter);
   const orderTemplate = document.getElementById('order')! as HTMLTemplateElement;
   const orderView = new OrderView(orderTemplate);

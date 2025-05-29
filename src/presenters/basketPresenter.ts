@@ -12,23 +12,25 @@ export class BasketPresenter {
     });
   }
 
-  updateCounter() {
-  this.view.renderCounter(this.model.getItems().length);
-}
+  updateCounter(): void {
+    this.view.renderCounter(this.model.getItems().length);
+  }
 
   public open(): void {
-    this.updateView();
-    this.view.open();
-  }
-
-  private updateView(): void {
-    this.view.renderItems(this.model.getItems());
+    const items = this.model.getItems();
+    this.view.render();
+    this.view.renderItems(items);
     this.view.updateTotal(this.model.getTotalPrice());
-  }
+    this.view.open();
+    this.updateCounter();
+}
 
   private handleRemoveItem = (productId: string): void => {
     this.model.removeItem(productId);
-    this.updateView();
+
+    const items = this.model.getItems();
+    this.view.renderItems(items);
+    this.view.updateTotal(this.model.getTotalPrice());
     this.updateCounter();
   };
 

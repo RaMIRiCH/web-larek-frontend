@@ -1,5 +1,4 @@
 import { Product } from "../models/Product";
-import { openModal,closeModal } from "./Modal";
 
 export type BasketViewCallbacks = {
   onRemoveItem?: (productId: string) => void;
@@ -7,100 +6,90 @@ export type BasketViewCallbacks = {
 };
 
 export class BasketView {
+  private template: HTMLTemplateElement;
   private container: HTMLElement;
-  private listElement: HTMLElement;
-  private totalElement: HTMLElement;
-  private submitButton: HTMLButtonElement;
-  private closeButton: HTMLButtonElement;
+  private contentElement: HTMLElement;
+
+  private listElement!: HTMLElement;
+  private totalElement!: HTMLElement;
+  private submitButton!: HTMLButtonElement;
+  private closeButton!: HTMLButtonElement;
   private callbacks: BasketViewCallbacks = {};
 
   constructor(template: HTMLTemplateElement) {
-    const content = template.content.cloneNode(true) as HTMLElement;
+    this.template = template;
+    this.container = document.getElementById('modal-container')!;
+    this.contentElement = this.container.querySelector('.modal__content')!;
+  }
 
-    this.container = document.createElement('div');
-    this.container.className = 'modal';
-    this.container.innerHTML = `
-      <div class="modal__container">
-        <button class="modal__close" aria-label="Закрыть"></button>
-        <div class="modal__content">
-          ${content.querySelector('.basket')!.outerHTML}
-        </div>
-      </div>
-    `;
+  public render(): void {
+    this.contentElement.innerHTML = '';
+    const content = this.template.content.querySelector('.basket')!.cloneNode(true) as HTMLElement;
+    this.contentElement.appendChild(content);
 
-    this.listElement = this.container.querySelector('.basket__list')!;
-    this.totalElement = this.container.querySelector('.basket__price')!;
-    this.submitButton = this.container.querySelector('.basket__button')!;
-    this.closeButton = this.container.querySelector('.modal__close')!;
+    this.listElement = this.contentElement.querySelector('.basket__list')!;
+    this.totalElement = this.contentElement.querySelector('.basket__price')!;
+    this.submitButton = this.contentElement.querySelector('.basket__button') as HTMLButtonElement;
+    this.closeButton = this.container.querySelector('.modal__close') as HTMLButtonElement;
 
-    this.closeButton.addEventListener('click', () => this.close());
     this.submitButton.addEventListener('click', () => this.callbacks.onSubmit?.());
+    this.closeButton.addEventListener('click', () => this.close());
   }
 
   public open(): void {
-    document.body.appendChild(this.container);
-    openModal(this.container);
+    this.container.classList.add('modal_active');
+    document.body.classList.add('no-scroll');
   }
 
   public close(): void {
-    closeModal(this.container);
-    this.container.remove();
+    this.container.classList.remove('modal_active');
+    document.body.classList.remove('no-scroll');
+    this.contentElement.innerHTML = '';
   }
 
-  renderCounter(count: number) {
-    const counter = document.querySelector('.header__basket-counter') as HTMLElement;
+  public renderItems(items: Product[]): void {
+    if (!this.listElement) throw new Error('List element not initialized');
+
+    this.listElement.innerHTML = '';
+
+    if (items.length === 0) {
+      this.listElement.innerHTML = `<li class="basket__item">Корзина пуста</li>`;
+      this.submitButton.disabled = true;
+      return;
+    }
+
+    items.forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'basket__item';
+      li.innerHTML = `
+        <span>${item.title}</span>
+        <span>${item.price} ₽</span>
+        <button class="basket__item-delete" data-id="${item.id}">✕</button>
+      `;
+
+      const btn = li.querySelector('button');
+      btn?.addEventListener('click', () => this.callbacks.onRemoveItem?.(item.id));
+
+      this.listElement.appendChild(li);
+    });
+
+    this.submitButton.disabled = false;
+  }
+
+  public updateTotal(price: number): void {
+    if (!this.totalElement) throw new Error('Total element not initialized');
+    this.totalElement.textContent = `${price} ₽`;
+  }
+
+  public renderCounter(count: number): void {
+    const counter = document.querySelector('.header__basket-counter') as HTMLElement | null;
     if (counter) {
       counter.textContent = String(count);
       counter.classList.toggle('hidden', count === 0);
     }
   }
 
-  renderItems(items: Product[]): void {
-    if (items.length === 0) {
-    this.listElement.innerHTML = `<li class="basket__empty">Корзина пуста</li>`;
-    this.submitButton.disabled = true;
-    this.totalElement.textContent = `0 синапсов`;
-    return;
-  }
-
-  this.submitButton.disabled = false;
-  this.listElement.innerHTML = items
-    .map(
-      (item, index) => `
-        <li class="basket__item card card_compact">
-          <span class="basket__item-index">${index + 1}</span>
-          <span class="card__title">${item.title}</span>
-          <span class="card__price">${item.formattedPrice}</span>
-          <button 
-            class="basket__item-delete" 
-            data-id="${item.id}" 
-            aria-label="Удалить"
-          ></button>
-        </li>
-      `
-    )
-    .join('');
-
-  this.totalElement.textContent = `${items
-    .reduce((sum, item) => sum + item.price, 0)} синапсов`;
-
-    this.listElement.querySelectorAll('.basket__item-delete').forEach(button => {
-      button.addEventListener('click', () => {
-        const productId = button.getAttribute('data-id');
-        if (productId) this.callbacks.onRemoveItem?.(productId);
-      });
-    });
-  }
-
-  updateTotal(price: number): void {
-    this.totalElement.textContent = `${price} синапсов`;
-  }
-
-  setCallbacks(callbacks: BasketViewCallbacks): void {
+  public setCallbacks(callbacks: BasketViewCallbacks): void {
     this.callbacks = callbacks;
-  }
-
-  get element(): HTMLElement {
-    return this.container;
   }
 }

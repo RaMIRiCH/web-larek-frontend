@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { IOrderForm } from '../types';
 import { openModal, closeModal } from './Modal';
 
 export class OrderView {
   private template: HTMLTemplateElement;
   private container: HTMLElement;
+  private contentElement: HTMLElement;
   private form!: HTMLFormElement;
   private addressInput!: HTMLInputElement;
   private paymentButtons!: HTMLButtonElement[];
@@ -12,40 +14,33 @@ export class OrderView {
 
   constructor(template: HTMLTemplateElement) {
     this.template = template;
-    this.container = document.createElement('div');
-    this.container.className = 'modal';
+    this.container = document.getElementById('modal-container')!;
+    this.contentElement = this.container.querySelector('.modal__content')!;
   }
 
   public render(): void {
+    this.contentElement.innerHTML = '';
     const content = this.template.content.cloneNode(true) as DocumentFragment;
+    this.contentElement.appendChild(content);
 
-    this.container.innerHTML = `
-      <div class="modal__container">
-        <button class="modal__close" aria-label="Закрыть"></button>
-        <div class="modal__content"></div>
-      </div>
-    `;
-    const contentEl = this.container.querySelector('.modal__content')!;
-    contentEl.appendChild(content);
-
-    document.body.appendChild(this.container);
-
-    this.form = this.container.querySelector<HTMLFormElement>('form[name="order"]')!;
-    this.addressInput = this.container.querySelector<HTMLInputElement>('input[name="address"]')!;
+    this.form = this.contentElement.querySelector<HTMLFormElement>('form[name="order"]')!;
+    this.addressInput = this.contentElement.querySelector<HTMLInputElement>('input[name="address"]')!;
     this.paymentButtons = Array.from(
-      this.container.querySelectorAll<HTMLButtonElement>('button[name="card"], button[name="cash"]')
+      this.contentElement.querySelectorAll<HTMLButtonElement>('button[name="card"], button[name="cash"]')
     );
-    this.nextButton = this.container.querySelector<HTMLButtonElement>('button.order__button')!;
+    this.nextButton = this.contentElement.querySelector<HTMLButtonElement>('button.order__button')!;
 
     this.initListeners();
   }
 
   public open(): void {
+    document.body.classList.add('modal-open');
     openModal(this.container);
   }
 
   public close(): void {
     closeModal(this.container);
+    this.container.style.display = 'none';
   }
 
   private initListeners(): void {

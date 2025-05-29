@@ -63,7 +63,10 @@ export class ProductModalPresenter {
   private closeModal = () => {
     this.modalContainer.classList.remove('modal_active');
     document.body.classList.remove('no-scroll');
-    this.modalContainer.innerHTML = '';
+    const content = this.modalContainer.querySelector('.modal__content');
+      if (content) {
+        content.innerHTML = ' ';
+      }
     this.modalContainer.removeEventListener('click', this.onOutsideClick);
     document.removeEventListener('keydown', this.onEscPress);
   };
