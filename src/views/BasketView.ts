@@ -58,13 +58,15 @@ export class BasketView {
       return;
     }
 
-    items.forEach(item => {
+    items.forEach((item, index) => {
       const li = document.createElement('li');
-      li.className = 'basket__item';
+      li.className = 'basket__item card card_compact';
+
       li.innerHTML = `
-        <span>${item.title}</span>
-        <span>${item.price} ₽</span>
-        <button class="basket__item-delete" data-id="${item.id}">✕</button>
+        <span class="basket__item-index">${index + 1}</span>
+        <span class="card__title">${item.title}</span>
+        <span class="card__price">${item.price} синапсов</span>
+        <button class="basket__item-delete" aria-label="удалить" data-id="${item.id}"></button>
       `;
 
       const btn = li.querySelector('button');
@@ -78,7 +80,7 @@ export class BasketView {
 
   public updateTotal(price: number): void {
     if (!this.totalElement) throw new Error('Total element not initialized');
-    this.totalElement.textContent = `${price} ₽`;
+    this.totalElement.textContent = `${price} синапсов`;
   }
 
   public renderCounter(count: number): void {

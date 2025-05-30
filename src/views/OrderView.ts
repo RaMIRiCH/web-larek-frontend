@@ -6,6 +6,7 @@ export class OrderView {
   private template: HTMLTemplateElement;
   private container: HTMLElement;
   private contentElement: HTMLElement;
+  private selectedPayment: string | null = null;
   private form!: HTMLFormElement;
   private addressInput!: HTMLInputElement;
   private paymentButtons!: HTMLButtonElement[];
@@ -40,14 +41,13 @@ export class OrderView {
 
   public close(): void {
     closeModal(this.container);
-    this.container.style.display = 'none';
   }
 
   private initListeners(): void {
     this.paymentButtons.forEach(btn =>
       btn.addEventListener('click', () => {
         this.paymentButtons.forEach(b => b.classList.toggle('button_alt-active', b === btn));
-        (this as any).selectedPayment = btn.name;
+        this.selectedPayment = btn.name;  // <-- здесь
         this.updateFormState();
       })
     );
@@ -58,12 +58,6 @@ export class OrderView {
     this.updateFormState();
   }
 
-  private updateFormState(): void {
-    const validAddr = this.addressInput.value.trim().length > 5;
-    const paymentSel = !!(this as any).selectedPayment;
-    this.nextButton.disabled = !(validAddr && paymentSel);
-  }
-
   private handleSubmit(event: SubmitEvent): void {
     event.preventDefault();
     if (this.nextButton.disabled) {
@@ -72,11 +66,17 @@ export class OrderView {
     }
     const data: IOrderForm = {
       address: this.addressInput.value.trim(),
-      payment: (this as any).selectedPayment,
+      payment: this.selectedPayment ?? '',
       email: '',
       phone: '',
     };
     this.onSubmitCallback(data);
+  }
+
+  private updateFormState(): void {
+    const validAddr = this.addressInput.value.trim().length > 5;
+    const paymentSel = !!this.selectedPayment;
+    this.nextButton.disabled = !(validAddr && paymentSel);
   }
 
   set onFormSubmit(cb: (data: IOrderForm) => void) {
