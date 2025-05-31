@@ -5,7 +5,9 @@ import { Api } from '../components/base/api';
 import { IOrderForm } from '../types';
 
 export class OrderPresenter {
-  private firstStepData: IOrderForm | null = null;
+  // Первый шаг
+  private address: string = '';
+  private payment: string = '';
 
   constructor(
     private orderView: OrderView,
@@ -13,60 +15,52 @@ export class OrderPresenter {
     private basketModel: BasketModel,
     private api: Api
   ) {
-    // Привязываем обработчик сабмита формы заказа (первый шаг)
+    // Обработчик первого шага — адрес + способ оплаты
     this.orderView.onFormSubmit = this.handleOrderFormSubmit;
   }
 
-  // Запускаем процесс оформления заказа — показываем первый шаг (OrderView)
+  // Запуск оформления заказа
   public startOrderProcess(): void {
     this.orderView.render();
     this.orderView.open();
   }
 
-  // Обработчик отправки первого шага (выбор способа оплаты и адрес)
+  // Первый шаг: сохраняем адрес и способ оплаты
   private handleOrderFormSubmit = (formData: IOrderForm): void => {
-    this.firstStepData = formData;
+    this.address = formData.address;
+    this.payment = formData.payment;
 
-    // Получаем контейнер для модалки (куда будет рендериться второй шаг)
-    const modalContainer = document.querySelector<HTMLElement>('.modal__content');
-
-    if (!modalContainer) {
-      console.error('Контейнер для модалки не найден');
+    const modalContent = document.querySelector<HTMLElement>('.modal__content');
+    if (!modalContent) {
+      console.error('Модалка не найдена');
       return;
     }
 
-    // Запускаем второй шаг оформления — показываем контакты (Email, телефон)
-    // Передаём контейнер и callback для получения данных контактов
-    this.contactsPresenter.start(modalContainer, this.handleContactsFormSubmit);
+    // Показываем второй шаг: контакты
+    this.contactsPresenter.start(modalContent, this.handleContactsFormSubmit);
   };
 
-  // Обработчик отправки второго шага (контакты)
+  // Второй шаг: email и телефон → собираем заказ и отправляем
   private handleContactsFormSubmit = async (contactsData: IOrderForm): Promise<void> => {
-    if (!this.firstStepData) {
-      console.error('Данные первого шага отсутствуют');
-      return;
-    }
-
-    // Собираем данные заказа из первого шага, контактов, корзины
     const orderData = {
-      ...this.firstStepData,
-      ...contactsData,
-      items: this.basketModel.getItems().map(item => item.id),
+      address: this.address,
+      payment: this.payment,
+      email: contactsData.email,
+      phone: contactsData.phone,
+      items: this.basketModel.getItems().map((item) => item.id),
       total: this.basketModel.getTotalPrice(),
     };
 
     try {
-      // Отправляем заказ на сервер
       await this.api.post('/order', orderData, 'POST');
 
-      // Очищаем корзину после успешного заказа
       this.basketModel.clear();
 
-      // Показываем модальное окно успешного оформления с суммой заказа
+      // Показываем модалку успешного заказа
       this.orderView.showSuccessModal(orderData.total);
-    } catch (err) {
-      alert('Ошибка отправки заказа');
-      console.error(err);
+    } catch (error) {
+      console.error('Ошибка отправки заказа:', error);
+      alert('Не удалось отправить заказ. Попробуйте позже.');
     }
   };
 }

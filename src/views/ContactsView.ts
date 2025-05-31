@@ -1,7 +1,8 @@
 import { IOrderForm } from '../types';
 
 export class ContactsView {
-  private element: HTMLElement;        // обёртка с формой
+  private template: HTMLTemplateElement;
+  private element!: HTMLElement; // теперь инициализируется в render
   private form!: HTMLFormElement;
   private emailInput!: HTMLInputElement;
   private phoneInput!: HTMLInputElement;
@@ -10,17 +11,13 @@ export class ContactsView {
   private formSubmitCallback?: (data: IOrderForm) => void;
 
   constructor(template: HTMLTemplateElement) {
-    // Клонируем форму из шаблона (сама <form> с нужными классами)
-    // Важно: template должен содержать именно форму с нужной структурой и классами
-    this.element = template.content.querySelector('form')!.cloneNode(true) as HTMLElement;
+    this.template = template;
   }
 
   render(modalContentContainer: HTMLElement) {
-    // Вставляем форму внутрь .modal__content, не заменяя весь контейнер
-    // Очищаем только содержимое .modal__content
     modalContentContainer.innerHTML = '';
+    this.element = this.template.content.querySelector('form')!.cloneNode(true) as HTMLElement;
     modalContentContainer.appendChild(this.element);
-
     this.initElements();
   }
 
@@ -48,17 +45,17 @@ export class ContactsView {
   }
 
   private handleSubmit = (e: Event) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!this.form.checkValidity()) {
-    this.form.reportValidity(); // тут уже покажем ошибки и фокус перейдёт на первое невалидное поле
-    return;
-  }
+    if (!this.form.checkValidity()) {
+      this.form.reportValidity();
+      return;
+    }
 
-  if (this.nextButton.disabled) return;
+    if (this.nextButton.disabled) return;
 
-  this.formSubmitCallback && this.formSubmitCallback(this.formData);
-};
+    this.formSubmitCallback && this.formSubmitCallback(this.formData);
+  };
 
   open() {
     const modal = this.element.closest('.modal');
@@ -75,25 +72,24 @@ export class ContactsView {
   }
 
   validateForm() {
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.emailInput.value);
-  const phoneDigits = this.phoneInput.value.replace(/\D/g, '');
-  const phoneValid = phoneDigits.length >= 10;
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.emailInput.value);
+    const phoneDigits = this.phoneInput.value.replace(/\D/g, '');
+    const phoneValid = phoneDigits.length >= 10;
 
-  if (!emailValid) {
-    this.emailInput.setCustomValidity('Введите корректный Email');
-  } else {
-    this.emailInput.setCustomValidity('');
+    if (!emailValid) {
+      this.emailInput.setCustomValidity('Введите корректный Email');
+    } else {
+      this.emailInput.setCustomValidity('');
+    }
+
+    if (!phoneValid) {
+      this.phoneInput.setCustomValidity('Введите корректный телефон');
+    } else {
+      this.phoneInput.setCustomValidity('');
+    }
+
+    this.nextButton.disabled = !(emailValid && phoneValid);
   }
-
-  if (!phoneValid) {
-    this.phoneInput.setCustomValidity('Введите корректный телефон');
-  } else {
-    this.phoneInput.setCustomValidity('');
-  }
-
-  // Не вызываем reportValidity здесь, просто обновляем состояние кнопки
-  this.nextButton.disabled = !(emailValid && phoneValid);
-}
 
   set onFormSubmit(callback: (data: IOrderForm) => void) {
     this.formSubmitCallback = callback;
@@ -102,3 +98,4 @@ export class ContactsView {
     }
   }
 }
+
