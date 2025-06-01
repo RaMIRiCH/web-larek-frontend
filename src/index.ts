@@ -14,6 +14,7 @@ import { ProductModalView } from './views/ProductModalView';
 import { ProductModalPresenter } from './presenters/ProductModalPresenter';
 import { API_URL } from './utils/constants';
 import { initModalCloseHandlers } from './views/Modal';
+import { SuccessView } from './views/SuccessView';
 
 document.addEventListener('DOMContentLoaded', () => {
   initModalCloseHandlers();
@@ -23,13 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const catalogContainer = document.querySelector('.gallery')! as HTMLElement;
   const modalContainer = document.getElementById('modal-container')!;
 
-  // 🛒 Корзина
+  // Корзина
   const basketModel = new BasketModel();
   const basketTemplate = document.querySelector('#basket')! as HTMLTemplateElement;
   const basketView = new BasketView(basketTemplate);
   const basketPresenter = new BasketPresenter(basketModel, basketView);
 
-  // 📦 Каталог и карточки
+  // Каталог и карточки
   const catalogView = new CatalogView(catalogContainer);
   const cardPreviewTemplate = document.getElementById('card-preview') as HTMLTemplateElement;
   const productModalView = new ProductModalView(modalContainer, cardPreviewTemplate);
@@ -37,24 +38,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const catalogPresenter = new CatalogPresenter(catalogView, api, productModalPresenter);
   catalogPresenter.init();
 
-  // 🧾 Оформление заказа
+  // Оформление заказа
   const orderTemplate = document.getElementById('order')! as HTMLTemplateElement;
   const orderView = new OrderView(orderTemplate);
 
-  // 📧 Шаг с контактами
+  // Шаг с контактами
   const contactsTemplate = document.getElementById('contacts')! as HTMLTemplateElement;
   const contactsView = new ContactsView(contactsTemplate);
   const contactsPresenter = new ContactsPresenter(contactsView);
 
-  // 🎯 OrderPresenter получает обе вьюхи
-  const orderPresenter = new OrderPresenter(orderView, contactsPresenter, basketModel, api);
+  const successTemplate = document.getElementById('success')! as HTMLTemplateElement;
+  const successView = new SuccessView(successTemplate);
 
-  // 📦 Клик по иконке корзины
+  const modalContent = document.querySelector('.modal__content')! as HTMLElement;
+
+  // OrderPresenter получает обе вьюхи
+  const orderPresenter = new OrderPresenter(
+    orderView,
+    contactsPresenter,
+    basketModel,
+    api,
+    basketPresenter,
+    successView,
+    modalContent
+  );
+
+  // Клик по иконке корзины
   document.querySelector('.header__basket')?.addEventListener('click', () => {
     basketPresenter.open();
   });
 
-  // 🟢 Запуск оформления заказа
+  // Запуск оформления заказа
   document.addEventListener('order:start', () => {
     console.log('[DEBUG] order:start received');
     orderPresenter.startOrderProcess();

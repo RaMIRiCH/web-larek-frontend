@@ -2,7 +2,7 @@ import { IOrderForm } from '../types';
 
 export class ContactsView {
   private template: HTMLTemplateElement;
-  private element!: HTMLElement; // теперь инициализируется в render
+  private element!: HTMLElement;
   private form!: HTMLFormElement;
   private emailInput!: HTMLInputElement;
   private phoneInput!: HTMLInputElement;

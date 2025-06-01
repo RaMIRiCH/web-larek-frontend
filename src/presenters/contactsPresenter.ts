@@ -12,7 +12,7 @@ export class ContactsPresenter {
 
   public start(container: HTMLElement, callback: (data: IOrderForm) => void): void {
     this.callback = callback;
-    this.contactsView.render(container);  // Вставляем форму в контейнер и инициализируем элементы
-    this.contactsView.open();              // Показываем модалку
+    this.contactsView.render(container);
+    this.contactsView.open();
   }
 }
