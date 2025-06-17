@@ -6,6 +6,11 @@
   gap: 1.5rem;
   border-radius: 3rem;
 
+  &__errors {
+    color: red;
+    font-size: 0.875rem;
+  }
+
   &__label {
     flex-grow: 1;
   }

@@ -5,6 +5,7 @@ import { openModal, closeModal } from './Modal';
 export class OrderView {
   private template: HTMLTemplateElement;
   private container: HTMLElement;
+  private errorsContainer: HTMLElement;
   private contentElement: HTMLElement;
   private selectedPayment: string | null = null;
   private form!: HTMLFormElement;
@@ -24,6 +25,7 @@ export class OrderView {
     const content = this.template.content.cloneNode(true) as DocumentFragment;
     this.contentElement.appendChild(content);
 
+    this.errorsContainer = this.contentElement.querySelector('.form__errors')!;
     this.form = this.contentElement.querySelector<HTMLFormElement>('form[name="order"]')!;
     this.addressInput = this.contentElement.querySelector<HTMLInputElement>('input[name="address"]')!;
     this.paymentButtons = Array.from(
@@ -57,13 +59,27 @@ export class OrderView {
       .addEventListener('click', () => this.close());
     this.updateFormState();
   }
+  
+  private showErrors(errors: string[]): void {
+    this.errorsContainer.innerHTML = errors.map(e => `<span>${e}</span>`).join('<br>')
+  }
 
   private handleSubmit(event: SubmitEvent): void {
     event.preventDefault();
-    if (this.nextButton.disabled) {
-      alert('Проверьте данные');
-      return;
-    }
+      const errors: string[] = [];
+
+      if (!this.selectedPayment) {
+        errors.push('Выберите способ оплаты');
+      }
+
+      if (this.addressInput.value.trim().length < 6) {
+        errors.push('Адрес должен быть не короче 6 символов');
+      }
+
+      this.showErrors(errors);
+
+      if (errors.length > 0) return;
+
     const data: IOrderForm = {
       address: this.addressInput.value.trim(),
       payment: this.selectedPayment ?? '',

@@ -7,6 +7,7 @@ export class ContactsView {
   private emailInput!: HTMLInputElement;
   private phoneInput!: HTMLInputElement;
   private nextButton!: HTMLButtonElement;
+  private errorsContainer!: HTMLElement;
 
   private formSubmitCallback?: (data: IOrderForm) => void;
 
@@ -26,6 +27,7 @@ export class ContactsView {
     this.emailInput = this.form.querySelector('input[name="email"]')!;
     this.phoneInput = this.form.querySelector('input[name="phone"]')!;
     this.nextButton = this.form.querySelector('button[type="submit"]')!;
+    this.errorsContainer = this.form.querySelector('.form__errors')!;
 
     this.nextButton.disabled = true;
 
@@ -42,6 +44,12 @@ export class ContactsView {
 
     this.form.removeEventListener('submit', this.handleSubmit);
     this.form.addEventListener('submit', this.handleSubmit);
+  }
+
+  private showErrors(errors: string[]) {
+    this.errorsContainer.innerHTML = errors.length > 0
+      ? errors.map(e => `<span>${e}</span>`).join('<br>')
+      : '';
   }
 
   private handleSubmit = (e: Event) => {
@@ -72,23 +80,18 @@ export class ContactsView {
   }
 
   validateForm() {
+    const errors: string[] = [];
+
     const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.emailInput.value);
+    if (!emailValid) errors.push('Введите корректный Email');
+
     const phoneDigits = this.phoneInput.value.replace(/\D/g, '');
     const phoneValid = phoneDigits.length >= 10;
+    if (!phoneValid) errors.push('Введите корректный телефон');
 
-    if (!emailValid) {
-      this.emailInput.setCustomValidity('Введите корректный Email');
-    } else {
-      this.emailInput.setCustomValidity('');
-    }
+    this.showErrors(errors);
 
-    if (!phoneValid) {
-      this.phoneInput.setCustomValidity('Введите корректный телефон');
-    } else {
-      this.phoneInput.setCustomValidity('');
-    }
-
-    this.nextButton.disabled = !(emailValid && phoneValid);
+    this.nextButton.disabled = errors.length > 0;
   }
 
   set onFormSubmit(callback: (data: IOrderForm) => void) {
