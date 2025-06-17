@@ -1,4 +1,4 @@
-import { Product } from '../models/Product';  // Импортируем класс Product
+import { Product } from '../models/Product';
 import { CDN_URL } from '../utils/constants';
 
 export class CatalogView {
@@ -13,7 +13,6 @@ export class CatalogView {
     }
   }
 
-  // Обратите внимание — теперь Product[], а не IProduct[]
   renderItems(products: Product[], onCardClick: (productId: string) => void): void {
     this.container.innerHTML = '';
 
@@ -39,7 +38,7 @@ export class CatalogView {
     if (imageElem) imageElem.src = `${CDN_URL}${product.image}`;
 
     const priceElem = cardElement.querySelector('.card__price') as HTMLElement;
-    if (priceElem) priceElem.textContent = product.formattedPrice; // Используем геттер из класса Product
+    if (priceElem) priceElem.textContent = product.formattedPrice;
 
     const categoryElem = cardElement.querySelector('.card__category') as HTMLElement;
     if (categoryElem) {
