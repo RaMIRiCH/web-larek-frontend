@@ -65,7 +65,7 @@ export class BasketView {
       li.innerHTML = `
         <span class="basket__item-index">${index + 1}</span>
         <span class="card__title">${item.title}</span>
-        <span class="card__price">${item.price} синапсов</span>
+        <span class="card__price">${item.formattedPrice}</span>
         <button class="basket__item-delete" aria-label="удалить" data-id="${item.id}"></button>
       `;
 
@@ -75,12 +75,13 @@ export class BasketView {
       this.listElement.appendChild(li);
     });
 
-    this.submitButton.disabled = false;
+    const hasPricelessItem = items.some(item => item.price === null);
+    this.submitButton.disabled = hasPricelessItem;
   }
 
-  public updateTotal(price: number): void {
+  public updateTotal(price: number | null): void {
     if (!this.totalElement) throw new Error('Total element not initialized');
-    this.totalElement.textContent = `${price} синапсов`;
+    this.totalElement.textContent = price === null ? 'Бесценно' : `${price} синапсов`;
   }
 
   public renderCounter(count: number): void {

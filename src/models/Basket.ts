@@ -21,7 +21,13 @@ export class BasketModel {
 		return this.items;
 	}
 
-	getTotalPrice(): number {
-		return this.items.reduce((sum, item) => sum + item.price, 0);
+	getTotalPrice(): number | null {
+		if (this.items.length === 0) return 0;
+
+		if (this.items.some(item => item.price === null)) {
+			return null;
+		}
+
+		return this.items.reduce((sum, item) => sum + (item.price ?? 0), 0);
 	}
 }

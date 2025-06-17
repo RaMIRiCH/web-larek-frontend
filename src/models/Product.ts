@@ -5,10 +5,14 @@ export class Product {
 		public description: string,
 		public image: string,
 		public category: string,
-		public price: number
-	) {}
+		public price: number | null,
+	) {
+		if (price === null) {
+			this.price = null;
+		}
+	}
 
 	get formattedPrice(): string {
-		return `${this.price} синапсов`;
+		return this.price === null ? 'Бесценно' : `${this.price} синапсов`;
 	}
 }

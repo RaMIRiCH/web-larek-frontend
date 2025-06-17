@@ -1,4 +1,4 @@
-import { IProduct } from '../types';
+import { Product } from '../models/Product';  // Импортируем класс Product
 import { CDN_URL } from '../utils/constants';
 
 export class CatalogView {
@@ -13,7 +13,8 @@ export class CatalogView {
     }
   }
 
-  renderItems(products: IProduct[], onCardClick: (productId: string) => void): void {
+  // Обратите внимание — теперь Product[], а не IProduct[]
+  renderItems(products: Product[], onCardClick: (productId: string) => void): void {
     this.container.innerHTML = '';
 
     products.forEach(product => {
@@ -23,7 +24,7 @@ export class CatalogView {
     });
   }
 
-  private renderCard(product: IProduct): HTMLElement {
+  private renderCard(product: Product): HTMLElement {
     const fragment = this.template.content.cloneNode(true) as DocumentFragment;
 
     const cardElement = fragment.querySelector('.card') as HTMLElement;
@@ -38,25 +39,24 @@ export class CatalogView {
     if (imageElem) imageElem.src = `${CDN_URL}${product.image}`;
 
     const priceElem = cardElement.querySelector('.card__price') as HTMLElement;
-    if (priceElem) priceElem.textContent =
-      product.price !== null ? `${product.price} синапсов` : 'Бесценно';
+    if (priceElem) priceElem.textContent = product.formattedPrice; // Используем геттер из класса Product
 
     const categoryElem = cardElement.querySelector('.card__category') as HTMLElement;
     if (categoryElem) {
       categoryElem.textContent = product.category;
 
       const className = 'card__category_' + (
-      {
-        'софт-скил': 'soft',
-        'хард-скил': 'hard',
-        'дополнительное': 'additional',
-        'другое': 'other',
-        'кнопка': 'button'
-      }[product.category.toLowerCase()] || 'other'
-    );
+        {
+          'софт-скил': 'soft',
+          'хард-скил': 'hard',
+          'дополнительное': 'additional',
+          'другое': 'other',
+          'кнопка': 'button'
+        }[product.category.toLowerCase()] || 'other'
+      );
 
-  categoryElem.className = `card__category ${className}`;
-}
+      categoryElem.className = `card__category ${className}`;
+    }
 
     cardElement.dataset.id = product.id;
 

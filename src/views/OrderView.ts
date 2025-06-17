@@ -47,7 +47,7 @@ export class OrderView {
     this.paymentButtons.forEach(btn =>
       btn.addEventListener('click', () => {
         this.paymentButtons.forEach(b => b.classList.toggle('button_alt-active', b === btn));
-        this.selectedPayment = btn.name;  // <-- здесь
+        this.selectedPayment = btn.name;
         this.updateFormState();
       })
     );
