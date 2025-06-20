@@ -18,18 +18,22 @@ export class BasketPresenter {
 
   public open(): void {
     const items = this.model.getItems();
+    const isOrderAvailable = this.model.isOrderAvailable();
+
     this.view.render();
-    this.view.renderItems(items);
+    this.view.renderItems(items, isOrderAvailable);
     this.view.updateTotal(this.model.getTotalPrice());
     this.view.open();
     this.updateCounter();
-}
+  }
 
   private handleRemoveItem = (productId: string): void => {
     this.model.removeItem(productId);
 
     const items = this.model.getItems();
-    this.view.renderItems(items);
+    const isOrderAvailable = this.model.isOrderAvailable();
+
+    this.view.renderItems(items, isOrderAvailable);
     this.view.updateTotal(this.model.getTotalPrice());
     this.updateCounter();
   };

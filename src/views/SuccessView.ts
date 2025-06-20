@@ -1,42 +1,48 @@
+import { openModal, closeModal, clearModalContent } from './Modal';
+
+export type SuccessViewCallbacks = {
+  onClose?: () => void;
+};
+
 export class SuccessView {
   private element: HTMLElement;
+  private descriptionElement!: HTMLElement;
+  private closeButton!: HTMLButtonElement;
+  private callbacks: SuccessViewCallbacks = {};
 
   constructor(template: HTMLTemplateElement) {
     this.element = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
   }
 
-  render(container: HTMLElement, total: number | string) {
-  container.innerHTML = '';
-  container.appendChild(this.element);
+  render(container: HTMLElement, formattedTotal: string): void {
+    container.innerHTML = '';
+    container.appendChild(this.element);
 
-  const totalEl = this.element.querySelector('.order-success__description') as HTMLElement;
-  if (totalEl) {
-    totalEl.textContent = total === 'бесценно' ? 'Бесценно' : `${total} синапсов`;
-  }
+    this.descriptionElement = this.element.querySelector('.order-success__description') as HTMLElement;
+    this.closeButton = this.element.querySelector('.order-success__close') as HTMLButtonElement;
 
-  const closeBtn = this.element.querySelector('.order-success__close') as HTMLButtonElement;
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      this.close();
-      location.reload();
-    });
-  }
-}
+    if (this.descriptionElement) {
+      this.descriptionElement.textContent = formattedTotal;
+    }
 
-
-  open() {
-    const modal = this.element.closest('.modal');
-    if (modal) {
-      modal.classList.add('modal_active');
+    if (this.closeButton) {
+      this.closeButton.addEventListener('click', () => {
+        this.callbacks.onClose?.();
+        this.close();
+      });
     }
   }
 
-  close() {
-    const modal = this.element.closest('.modal');
-    if (modal) {
-      modal.classList.remove('modal_active');
-      const content = modal.querySelector('.modal__content');
-      if (content) content.innerHTML = '';
-    }
+  open(): void {
+    openModal(this.element);
+  }
+
+  close(): void {
+    closeModal(this.element);
+    clearModalContent(this.element);
+  }
+
+  setCallbacks(callbacks: SuccessViewCallbacks): void {
+    this.callbacks = callbacks;
   }
 }

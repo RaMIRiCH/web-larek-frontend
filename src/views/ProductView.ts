@@ -1,4 +1,4 @@
-import { IProduct } from '../types';
+import { Product } from '../models/Product';
 import { openModal } from './Modal';
 
 export class ProductView {
@@ -10,13 +10,13 @@ export class ProductView {
     this.content = this.modal.querySelector('.modal__content')!;
   }
 
-  render(product: IProduct, onAddToBasket: (product: IProduct) => void) {
+  render(product: Product, onAddToBasket: (product: Product) => void): void {
     const template = document.getElementById('product-preview') as HTMLTemplateElement;
     const fragment = template.content.cloneNode(true) as HTMLElement;
 
     (fragment.querySelector('.product__title') as HTMLElement).textContent = product.title;
     (fragment.querySelector('.product__image') as HTMLImageElement).src = product.image;
-    (fragment.querySelector('.product__price') as HTMLElement).textContent = `${product.price} синапсов`;
+    (fragment.querySelector('.product__price') as HTMLElement).textContent = product.formattedPrice;
     (fragment.querySelector('.product__description') as HTMLElement).textContent = product.description;
 
     const buyButton = fragment.querySelector('.product__buy') as HTMLButtonElement;

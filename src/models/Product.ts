@@ -15,4 +15,15 @@ export class Product {
 	get formattedPrice(): string {
 		return this.price === null ? 'Бесценно' : `${this.price} синапсов`;
 	}
+
+	get categoryModifier(): string {
+		const map: Record<string, string> = {
+		'софт-скил': 'soft',
+		'хард-скил': 'hard',
+		'другое': 'other',
+		'кнопка': 'button',
+		'дополнительное': 'additional',
+		};
+		return map[this.category.toLowerCase()] ?? 'other';
+	}
 }

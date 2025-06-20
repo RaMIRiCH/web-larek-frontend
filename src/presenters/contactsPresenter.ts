@@ -1,12 +1,37 @@
 import { ContactsView } from '../views/ContactsView';
+import { OrderModel } from '../models/OrderModel';
 import { IOrderForm } from '../types';
+import { BasketModel } from '../models/Basket';
 
 export class ContactsPresenter {
   private callback: ((data: IOrderForm) => void) | null = null;
 
-  constructor(private contactsView: ContactsView) {
+  constructor(
+    private contactsView: ContactsView,
+    private orderModel: OrderModel,
+    private basketModel: BasketModel
+  ) {
     this.contactsView.onFormSubmit = (data) => {
-      if (this.callback) this.callback(data);
+      this.orderModel.setEmail(data.email);
+      this.orderModel.setPhone(data.phone);
+
+      const errors = this.orderModel.validateStep2();
+      this.contactsView.showErrors(errors);
+
+      if (errors.length === 0 && this.callback) {
+        this.callback(this.orderModel.getData());
+      }
+    };
+
+    this.contactsView.onInputChange = () => {
+      this.orderModel.setEmail(this.contactsView.email);
+      this.orderModel.setPhone(this.contactsView.phone);
+
+      const errors = this.orderModel.validateStep2();
+      const isValid = errors.length === 0;
+      const hasItems = this.basketModel.getItems().length > 0;
+
+      this.contactsView.updateButtonState(isValid && hasItems);
     };
   }
 

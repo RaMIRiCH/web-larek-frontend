@@ -4,6 +4,7 @@ import { Api } from './components/base/api';
 import { CatalogView } from './views/CatalogView';
 import { BasketView } from './views/BasketView';
 import { OrderView } from './views/OrderView';
+import { OrderModel } from './models/OrderModel';
 import { ContactsView } from './views/ContactsView';
 import { BasketModel } from './models/Basket';
 import { CatalogPresenter } from './presenters/catalogPresenter';
@@ -20,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initModalCloseHandlers();
 
   const api = new Api(API_URL);
+  const orderModel = new OrderModel();
 
   const catalogContainer = document.querySelector('.gallery')! as HTMLElement;
   const modalContainer = document.getElementById('modal-container')!;
@@ -45,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Шаг с контактами
   const contactsTemplate = document.getElementById('contacts')! as HTMLTemplateElement;
   const contactsView = new ContactsView(contactsTemplate);
-  const contactsPresenter = new ContactsPresenter(contactsView);
+  const contactsPresenter = new ContactsPresenter(contactsView, orderModel, basketModel);
 
   const successTemplate = document.getElementById('success')! as HTMLTemplateElement;
   const successView = new SuccessView(successTemplate);
@@ -60,7 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
     api,
     basketPresenter,
     successView,
-    modalContent
+    modalContent,
+    orderModel
   );
 
   // Клик по иконке корзины

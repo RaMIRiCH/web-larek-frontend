@@ -1,4 +1,4 @@
-import { IProduct } from '../types';
+import { Product } from '../models/Product';
 import { CDN_URL } from '../utils/constants';
 
 export class ProductModalView {
@@ -12,54 +12,27 @@ export class ProductModalView {
     this.template = template;
   }
 
-  render(product: IProduct): void {
+  render(product: Product): void {
     const content = this.container.querySelector('.modal__content');
-    if (!content) {
-      console.error('Не найдена .modal__content в модалке');
-      return;
-    }
+    if (!content) return;
     content.innerHTML = '';
 
     const cardFragment = this.template.content.cloneNode(true) as HTMLElement;
-
     const card = cardFragment.querySelector('.card') as HTMLElement;
-    const image = card.querySelector('.card__image') as HTMLImageElement;
-    const category = card.querySelector('.card__category') as HTMLElement;
-    const title = card.querySelector('.card__title') as HTMLElement;
-    const description = card.querySelector('.card__text') as HTMLElement;
-    const price = card.querySelector('.card__price') as HTMLElement;
+
+    card.querySelector('.card__image')!.setAttribute('src', `${CDN_URL}${product.image}`);
+    card.querySelector('.card__image')!.setAttribute('alt', product.title);
+    card.querySelector('.card__title')!.textContent = product.title;
+    card.querySelector('.card__text')!.textContent = product.description;
+    card.querySelector('.card__price')!.textContent = product.formattedPrice;
+
+    const categoryEl = card.querySelector('.card__category')!;
+    categoryEl.textContent = product.category;
+
+    categoryEl.className = 'card__category'; // сброс классов
+    categoryEl.classList.add(`card__category_${product.categoryModifier}`);
+
     this.addButton = card.querySelector('.button') as HTMLButtonElement;
-
-    image.src = `${CDN_URL}${product.image}`;
-    image.alt = product.title;
-
-    category.classList.forEach(className => {
-      if (className.startsWith('card__category_')) {
-        category.classList.remove(className);
-      }
-    });
-
-    if (!category.classList.contains('card__category')) {
-      category.classList.add('card__category');
-    }
-
-    const categoryMap: Record<string, string> = {
-      'софт-скил': 'soft',
-      'хард-скил': 'hard',
-      'другое': 'other',
-      'кнопка': 'button',
-      'дополнительное': 'additional'
-    };
-
-    const categoryRaw = product.category.toLowerCase();
-    const modifier = categoryMap[categoryRaw] ?? 'other';
-    category.classList.add(`card__category_${modifier}`);
-    category.textContent = product.category;
-
-    title.textContent = product.title;
-    description.textContent = product.description;
-    price.textContent = product.price !== null ? `${product.price} синапсов` : 'Бесценно';
-
     this.addButton.dataset.id = product.id;
 
     content.appendChild(cardFragment);
@@ -68,17 +41,13 @@ export class ProductModalView {
   }
 
   bindClose(handler: () => void): void {
-    if (this.closeBtn) {
-      this.closeBtn.addEventListener('click', handler);
-    }
+    this.closeBtn?.addEventListener('click', handler);
   }
 
   bindAddToBasket(handler: (productId: string) => void): void {
-    if (this.addButton) {
-      const id = this.addButton.getAttribute('data-id');
-      if (id) {
-        this.addButton.addEventListener('click', () => handler(id));
-      }
+    const id = this.addButton?.dataset.id;
+    if (id) {
+      this.addButton!.addEventListener('click', () => handler(id));
     }
   }
 }

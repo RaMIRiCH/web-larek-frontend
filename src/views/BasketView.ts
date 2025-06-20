@@ -47,36 +47,33 @@ export class BasketView {
     this.contentElement.innerHTML = '';
   }
 
-  public renderItems(items: Product[]): void {
+  public renderItems(items: Product[], isOrderAvailable: boolean): void {
     if (!this.listElement) throw new Error('List element not initialized');
 
     this.listElement.innerHTML = '';
 
     if (items.length === 0) {
       this.listElement.innerHTML = `<li class="basket__item">Корзина пуста</li>`;
-      this.submitButton.disabled = true;
-      return;
+    } else {
+      items.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.className = 'basket__item card card_compact';
+
+        li.innerHTML = `
+          <span class="basket__item-index">${index + 1}</span>
+          <span class="card__title">${item.title}</span>
+          <span class="card__price">${item.formattedPrice}</span>
+          <button class="basket__item-delete" aria-label="удалить" data-id="${item.id}"></button>
+        `;
+
+        const btn = li.querySelector('button');
+        btn?.addEventListener('click', () => this.callbacks.onRemoveItem?.(item.id));
+
+        this.listElement.appendChild(li);
+      });
     }
 
-    items.forEach((item, index) => {
-      const li = document.createElement('li');
-      li.className = 'basket__item card card_compact';
-
-      li.innerHTML = `
-        <span class="basket__item-index">${index + 1}</span>
-        <span class="card__title">${item.title}</span>
-        <span class="card__price">${item.formattedPrice}</span>
-        <button class="basket__item-delete" aria-label="удалить" data-id="${item.id}"></button>
-      `;
-
-      const btn = li.querySelector('button');
-      btn?.addEventListener('click', () => this.callbacks.onRemoveItem?.(item.id));
-
-      this.listElement.appendChild(li);
-    });
-
-    const hasPricelessItem = items.some(item => item.price === null);
-    this.submitButton.disabled = hasPricelessItem;
+    this.submitButton.disabled = !isOrderAvailable;
   }
 
   public updateTotal(price: number | null): void {

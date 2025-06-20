@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-inferrable-types */
 import { OrderView } from '../views/OrderView';
+import { OrderModel } from '../models/OrderModel';
 import { ContactsPresenter } from './contactsPresenter';
 import { BasketModel } from '../models/Basket';
 import { Api } from '../components/base/api';
@@ -8,9 +9,6 @@ import type { BasketPresenter } from './basketPresenter';
 import { SuccessView } from '../views/SuccessView';
 
 export class OrderPresenter {
-  private address: string = '';
-  private payment: string = '';
-
   constructor(
     private orderView: OrderView,
     private contactsPresenter: ContactsPresenter,
@@ -18,9 +16,14 @@ export class OrderPresenter {
     private api: Api,
     private basketPresenter: BasketPresenter,
     private successView: SuccessView,
-    private modalContent: HTMLElement
+    private modalContent: HTMLElement,
+    private orderModel: OrderModel,
   ) {
     this.orderView.onFormSubmit = this.handleOrderFormSubmit;
+
+    this.successView.setCallbacks({
+      onClose: () => location.reload()
+    });
   }
 
   public startOrderProcess(): void {
@@ -29,27 +32,38 @@ export class OrderPresenter {
   }
 
   private handleOrderFormSubmit = (formData: IOrderForm): void => {
-    this.address = formData.address;
-    this.payment = formData.payment;
+    this.orderModel.setAddress(formData.address);
+    this.orderModel.setPayment(formData.payment);
+
+    const errors = this.orderModel.validateStep1();
+
+    if (errors.length > 0) {
+      this.orderView.showErrors(errors);
+      return;
+    }
 
     this.contactsPresenter.start(this.modalContent, this.handleContactsFormSubmit);
   };
 
   private handleContactsFormSubmit = async (contactsData: IOrderForm): Promise<void> => {
+    this.orderModel.setEmail(contactsData.email);
+    this.orderModel.setPhone(contactsData.phone);
+
+    const errors = this.orderModel.validateStep2();
+    if (errors.length > 0) {
+      this.orderView.showErrors(errors);
+      return;
+    }
+
     const orderData = {
-      address: this.address,
-      payment: this.payment,
-      email: contactsData.email,
-      phone: contactsData.phone,
+      ...this.orderModel.getData(),
       items: this.basketModel.getItems().map((item) => item.id),
       total: this.basketModel.getTotalPrice(),
     };
 
     try {
       await this.api.post('/order', orderData, 'POST');
-
       this.basketModel.clear();
-
       this.successView.render(this.modalContent, orderData.total);
       this.successView.open();
     } catch (error) {

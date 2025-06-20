@@ -10,6 +10,7 @@ export class ContactsView {
   private errorsContainer!: HTMLElement;
 
   private formSubmitCallback?: (data: IOrderForm) => void;
+  public onInputChange?: () => void;
 
   constructor(template: HTMLTemplateElement) {
     this.template = template;
@@ -20,6 +21,8 @@ export class ContactsView {
     this.element = this.template.content.querySelector('form')!.cloneNode(true) as HTMLElement;
     modalContentContainer.appendChild(this.element);
     this.initElements();
+
+    this.updateButtonState(false);
   }
 
   private initElements() {
@@ -29,40 +32,22 @@ export class ContactsView {
     this.nextButton = this.form.querySelector('button[type="submit"]')!;
     this.errorsContainer = this.form.querySelector('.form__errors')!;
 
-    this.nextButton.disabled = true;
+    this.emailInput.addEventListener('input', () => {
+      this.onInputChange?.();
+    });
 
-    this.emailInput.addEventListener('input', () => this.validateForm());
-    this.phoneInput.addEventListener('input', () => this.validateForm());
+    this.phoneInput.addEventListener('input', () => {
+      this.onInputChange?.();
+    });
 
-    if (this.formSubmitCallback) {
-      this.attachSubmitListener();
-    }
-  }
-
-  private attachSubmitListener() {
-    if (!this.form) return;
-
-    this.form.removeEventListener('submit', this.handleSubmit);
     this.form.addEventListener('submit', this.handleSubmit);
-  }
-
-  private showErrors(errors: string[]) {
-    this.errorsContainer.innerHTML = errors.length > 0
-      ? errors.map(e => `<span>${e}</span>`).join('<br>')
-      : '';
   }
 
   private handleSubmit = (e: Event) => {
     e.preventDefault();
-
-    if (!this.form.checkValidity()) {
-      this.form.reportValidity();
-      return;
+    if (this.formSubmitCallback) {
+      this.formSubmitCallback(this.formData);
     }
-
-    if (this.nextButton.disabled) return;
-
-    this.formSubmitCallback && this.formSubmitCallback(this.formData);
   };
 
   open() {
@@ -79,26 +64,17 @@ export class ContactsView {
     };
   }
 
-  validateForm() {
-    const errors: string[] = [];
+  updateButtonState(isEnabled: boolean): void {
+    this.nextButton.disabled = !isEnabled;
+  }
 
-    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.emailInput.value);
-    if (!emailValid) errors.push('Введите корректный Email');
-
-    const phoneDigits = this.phoneInput.value.replace(/\D/g, '');
-    const phoneValid = phoneDigits.length >= 10;
-    if (!phoneValid) errors.push('Введите корректный телефон');
-
-    this.showErrors(errors);
-
-    this.nextButton.disabled = errors.length > 0;
+  showErrors(errors: string[]) {
+    this.errorsContainer.innerHTML = errors.length > 0
+      ? errors.map(e => `<span>${e}</span>`).join('<br>')
+      : '';
   }
 
   set onFormSubmit(callback: (data: IOrderForm) => void) {
     this.formSubmitCallback = callback;
-    if (this.form) {
-      this.attachSubmitListener();
-    }
   }
 }
-

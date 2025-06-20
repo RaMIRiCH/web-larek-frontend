@@ -25,8 +25,8 @@ export class CatalogView {
 
   private renderCard(product: Product): HTMLElement {
     const fragment = this.template.content.cloneNode(true) as DocumentFragment;
-
     const cardElement = fragment.querySelector('.card') as HTMLElement;
+
     if (!cardElement) {
       throw new Error('Card element with class .card not found in template');
     }
@@ -35,7 +35,10 @@ export class CatalogView {
     if (titleElem) titleElem.textContent = product.title;
 
     const imageElem = cardElement.querySelector('.card__image') as HTMLImageElement;
-    if (imageElem) imageElem.src = `${CDN_URL}${product.image}`;
+    if (imageElem) {
+      imageElem.src = `${CDN_URL}${product.image}`;
+      imageElem.alt = product.title;
+    }
 
     const priceElem = cardElement.querySelector('.card__price') as HTMLElement;
     if (priceElem) priceElem.textContent = product.formattedPrice;
@@ -43,18 +46,7 @@ export class CatalogView {
     const categoryElem = cardElement.querySelector('.card__category') as HTMLElement;
     if (categoryElem) {
       categoryElem.textContent = product.category;
-
-      const className = 'card__category_' + (
-        {
-          'софт-скил': 'soft',
-          'хард-скил': 'hard',
-          'дополнительное': 'additional',
-          'другое': 'other',
-          'кнопка': 'button'
-        }[product.category.toLowerCase()] || 'other'
-      );
-
-      categoryElem.className = `card__category ${className}`;
+      categoryElem.className = `card__category card__category_${product.categoryModifier}`;
     }
 
     cardElement.dataset.id = product.id;

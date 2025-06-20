@@ -1,11 +1,26 @@
-export function openModal(modal: HTMLElement) {
+function findModal(element: HTMLElement): HTMLElement | null {
+  return element.closest('.modal');
+}
+
+export function openModal(elementInsideModal: HTMLElement): void {
+  const modal = findModal(elementInsideModal);
+  if (!modal) return;
   modal.classList.add('modal_active');
   document.body.classList.add('no-scroll');
 }
 
-export function closeModal(modal: HTMLElement) {
+export function closeModal(elementInsideModal: HTMLElement): void {
+  const modal = findModal(elementInsideModal);
+  if (!modal) return;
   modal.classList.remove('modal_active');
   document.body.classList.remove('no-scroll');
+  const content = modal.querySelector('.modal__content');
+  if (content) content.innerHTML = '';
+}
+
+export function clearModalContent(modal: HTMLElement) {
+  const content = modal.querySelector('.modal__content');
+  if (content) content.innerHTML = '';
 }
 
 export function initModalCloseHandlers() {

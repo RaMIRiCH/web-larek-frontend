@@ -60,33 +60,8 @@ export class OrderView {
     this.updateFormState();
   }
   
-  private showErrors(errors: string[]): void {
+  public showErrors(errors: string[]): void {
     this.errorsContainer.innerHTML = errors.map(e => `<span>${e}</span>`).join('<br>')
-  }
-
-  private handleSubmit(event: SubmitEvent): void {
-    event.preventDefault();
-      const errors: string[] = [];
-
-      if (!this.selectedPayment) {
-        errors.push('Выберите способ оплаты');
-      }
-
-      if (this.addressInput.value.trim().length < 6) {
-        errors.push('Адрес должен быть не короче 6 символов');
-      }
-
-      this.showErrors(errors);
-
-      if (errors.length > 0) return;
-
-    const data: IOrderForm = {
-      address: this.addressInput.value.trim(),
-      payment: this.selectedPayment ?? '',
-      email: '',
-      phone: '',
-    };
-    this.onSubmitCallback(data);
   }
 
   private updateFormState(): void {

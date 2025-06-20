@@ -30,4 +30,15 @@ export class BasketModel {
 
 		return this.items.reduce((sum, item) => sum + (item.price ?? 0), 0);
 	}
+	isEmpty(): boolean {
+    return this.items.length === 0;
+  }
+
+	hasPricelessItems(): boolean {
+		return this.items.some(item => item.price === null);
+	}
+
+	isOrderAvailable(): boolean {
+		return !this.isEmpty() && !this.hasPricelessItems();
+	}
 }
