@@ -5,6 +5,8 @@ export class OrderModel {
   private payment: string = '';
   private email: string = '';
   private phone: string = '';
+  private items: string[] = [];
+  private total: number = 0;
 
   setAddress(address: string): void {
     this.address = address.trim();
@@ -20,6 +22,14 @@ export class OrderModel {
 
   setPhone(phone: string): void {
     this.phone = phone.trim();
+  }
+
+  setItems(items: string[]): void {
+    this.items = items;
+  }
+
+  setTotal(total: number): void {
+    this.total = total;
   }
 
   validateStep1(): string[] {
@@ -58,6 +68,8 @@ export class OrderModel {
       payment: this.payment,
       email: this.email,
       phone: this.phone,
+      items: this.items,
+      total: this.total,
     };
   }
 
@@ -66,5 +78,7 @@ export class OrderModel {
     this.payment = '';
     this.email = '';
     this.phone = '';
+    this.items = [];
+    this.total = 0;
   }
 }

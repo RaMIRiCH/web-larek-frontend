@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { IOrderForm } from '../types';
-import { openModal, closeModal } from './Modal';
+import { openModal, closeModal, clearModalContent } from './Modal';
 
 export class OrderView {
   private template: HTMLTemplateElement;
   private container: HTMLElement;
+  private element!: HTMLElement;
   private errorsContainer: HTMLElement;
   private contentElement: HTMLElement;
   private selectedPayment: string | null = null;
@@ -18,6 +19,7 @@ export class OrderView {
     this.template = template;
     this.container = document.getElementById('modal-container')!;
     this.contentElement = this.container.querySelector('.modal__content')!;
+    this.element = this.container;
   }
 
   public render(): void {
@@ -36,13 +38,23 @@ export class OrderView {
     this.initListeners();
   }
 
-  public open(): void {
-    document.body.classList.add('modal-open');
-    openModal(this.container);
+  open(): void {
+    openModal(this.element);
   }
 
-  public close(): void {
-    closeModal(this.container);
+  close(): void {
+    closeModal(this.element);
+    clearModalContent(this.element);
+  }
+
+  private handleSubmit(e: Event): void {
+    e.preventDefault();
+    this.onSubmitCallback({
+      address: this.addressInput.value,
+      payment: this.selectedPayment!,
+      email: '',
+      phone: '',
+    });
   }
 
   private initListeners(): void {

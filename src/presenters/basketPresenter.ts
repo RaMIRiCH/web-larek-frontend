@@ -38,7 +38,7 @@ export class BasketPresenter {
     this.updateCounter();
   };
 
-  private handleSubmit = (): void => {
+  public handleSubmit = (): void => {
     this.view.close();
     document.dispatchEvent(new CustomEvent('order:start'));
   };

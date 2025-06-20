@@ -1,4 +1,5 @@
 import { Product } from "../models/Product";
+import { openModal, closeModal, clearModalContent } from "./Modal";
 
 export type BasketViewCallbacks = {
   onRemoveItem?: (productId: string) => void;
@@ -9,7 +10,7 @@ export class BasketView {
   private template: HTMLTemplateElement;
   private container: HTMLElement;
   private contentElement: HTMLElement;
-
+  private element!: HTMLElement;
   private listElement!: HTMLElement;
   private totalElement!: HTMLElement;
   private submitButton!: HTMLButtonElement;
@@ -25,6 +26,9 @@ export class BasketView {
   public render(): void {
     this.contentElement.innerHTML = '';
     const content = this.template.content.querySelector('.basket')!.cloneNode(true) as HTMLElement;
+
+    this.element = content;
+
     this.contentElement.appendChild(content);
 
     this.listElement = this.contentElement.querySelector('.basket__list')!;
@@ -36,15 +40,13 @@ export class BasketView {
     this.closeButton.addEventListener('click', () => this.close());
   }
 
-  public open(): void {
-    this.container.classList.add('modal_active');
-    document.body.classList.add('no-scroll');
+  open(): void {
+    openModal(this.element);
   }
 
-  public close(): void {
-    this.container.classList.remove('modal_active');
-    document.body.classList.remove('no-scroll');
-    this.contentElement.innerHTML = '';
+  close(): void {
+    closeModal(this.element);
+    clearModalContent(this.element);
   }
 
   public renderItems(items: Product[], isOrderAvailable: boolean): void {

@@ -42,6 +42,9 @@ export class OrderPresenter {
       return;
     }
 
+    this.orderModel.setItems(this.basketModel.getItems().map((item) => item.id));
+    this.orderModel.setTotal(this.basketModel.getTotalPrice());
+
     this.contactsPresenter.start(this.modalContent, this.handleContactsFormSubmit);
   };
 
@@ -55,16 +58,12 @@ export class OrderPresenter {
       return;
     }
 
-    const orderData = {
-      ...this.orderModel.getData(),
-      items: this.basketModel.getItems().map((item) => item.id),
-      total: this.basketModel.getTotalPrice(),
-    };
+    const orderData = this.orderModel.getData();
 
     try {
       await this.api.post('/order', orderData, 'POST');
       this.basketModel.clear();
-      this.successView.render(this.modalContent, orderData.total);
+      this.successView.render(this.modalContent, orderData.total.toString());
       this.successView.open();
     } catch (error) {
       console.error('Ошибка отправки заказа:', error);

@@ -1,4 +1,5 @@
 import { IOrderForm } from '../types';
+import { openModal, closeModal, clearModalContent } from './Modal';
 
 export class ContactsView {
   private template: HTMLTemplateElement;
@@ -43,17 +44,29 @@ export class ContactsView {
     this.form.addEventListener('submit', this.handleSubmit);
   }
 
-  private handleSubmit = (e: Event) => {
+  public handleSubmit = (e: Event) => {
     e.preventDefault();
     if (this.formSubmitCallback) {
       this.formSubmitCallback(this.formData);
     }
   };
 
-  open() {
-    const modal = this.element.closest('.modal');
-    if (modal) modal.classList.add('modal_active');
-  }
+    open(): void {
+      openModal(this.element);
+    }
+  
+    close(): void {
+      closeModal(this.element);
+      clearModalContent(this.element);
+    }
+
+    get email(): string {
+      return this.emailInput?.value ?? '';
+    }
+
+    get phone(): string {
+      return this.phoneInput?.value ?? '';
+    }
 
   get formData(): IOrderForm {
     return {
