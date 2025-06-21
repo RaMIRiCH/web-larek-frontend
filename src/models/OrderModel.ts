@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-inferrable-types */
 import { IOrder } from '../types/index';
 
 export class OrderModel {

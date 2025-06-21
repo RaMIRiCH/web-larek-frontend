@@ -14,23 +14,19 @@ export class SuccessView {
     this.element = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
   }
 
-  render(container: HTMLElement, formattedTotal: string): void {
+  render(container: HTMLElement, total: number): void {
     container.innerHTML = '';
     container.appendChild(this.element);
 
-    this.descriptionElement = this.element.querySelector('.order-success__description') as HTMLElement;
-    this.closeButton = this.element.querySelector('.order-success__close') as HTMLButtonElement;
+    this.descriptionElement = this.element.querySelector('.order-success__description')!;
+    this.closeButton = this.element.querySelector('.order-success__close')!;
 
-    if (this.descriptionElement) {
-      this.descriptionElement.textContent = formattedTotal;
-    }
+    this.descriptionElement.textContent = `Списано ${total} синапсов`;
 
-    if (this.closeButton) {
-      this.closeButton.addEventListener('click', () => {
-        this.callbacks.onClose?.();
-        this.close();
-      });
-    }
+    this.closeButton.addEventListener('click', () => {
+      this.callbacks.onClose?.();
+      this.close();
+    });
   }
 
   open(): void {
