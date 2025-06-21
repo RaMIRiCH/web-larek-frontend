@@ -12,23 +12,19 @@ export class ContactsPresenter {
     private basketModel: BasketModel
   ) {
     this.contactsView.onFormSubmit = (data) => {
-      console.log('[ContactsPresenter] onFormSubmit triggered', data);
       this.orderModel.setEmail(data.email);
       this.orderModel.setPhone(data.phone);
 
       const errors = this.orderModel.validateStep2();
-      console.log('[ContactsPresenter] validateStep2 errors:', errors);
 
       this.contactsView.showErrors(errors);
 
       if (errors.length === 0 && this.callback) {
-        console.log('[ContactsPresenter] Valid data, calling callback');
         this.callback(this.orderModel.getData());
       }
     };
 
     this.contactsView.onInputChange = () => {
-      console.log('[ContactsPresenter] onInputChange triggered');
       this.orderModel.setEmail(this.contactsView.email);
       this.orderModel.setPhone(this.contactsView.phone);
 

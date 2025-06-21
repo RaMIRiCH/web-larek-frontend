@@ -18,7 +18,6 @@ export class ContactsView {
   }
 
   render(modalContentContainer: HTMLElement) {
-    console.log('[ContactsView] render called');
     modalContentContainer.innerHTML = '';
 
     const content = this.template.content.cloneNode(true) as DocumentFragment;
@@ -32,7 +31,6 @@ export class ContactsView {
   }
 
   private initElements() {
-    console.log('[ContactsView] initElements called');
     this.form = this.element as HTMLFormElement;
     this.emailInput = this.form.querySelector('input[name="email"]')!;
     this.phoneInput = this.form.querySelector('input[name="phone"]')!;
@@ -40,7 +38,6 @@ export class ContactsView {
     this.errorsContainer = this.form.querySelector('.form__errors')!;
 
     this.emailInput.addEventListener('input', () => {
-      console.log('[ContactsView] email input changed');
       this.onInputChange?.();
     });
 
@@ -52,7 +49,6 @@ export class ContactsView {
   }
 
   public showErrors(errors: string[]) {
-    console.log('[ContactsView.showErrors] errors:', errors);
     this.errorsContainer.innerHTML = errors.length > 0
       ? errors.map(e => `<span>${e}</span>`).join('<br>')
       : '';
@@ -60,7 +56,6 @@ export class ContactsView {
 
   public handleSubmit = (e: Event) => {
     e.preventDefault();
-    console.log('[ContactsView] handleSubmit called');
     if (this.formSubmitCallback) {
       this.formSubmitCallback(this.formData);
     }

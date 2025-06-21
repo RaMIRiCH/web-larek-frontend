@@ -32,14 +32,12 @@ export class OrderPresenter {
   }
 
   private handleOrderFormSubmit = (formData: IOrderForm): void => {
-    console.log('[OrderPresenter] handleOrderFormSubmit called', formData);
     this.orderModel.setAddress(formData.address);
     this.orderModel.setPayment(formData.payment);
 
     const errors = this.orderModel.validateStep1();
 
     if (errors.length > 0) {
-      console.log('[OrderPresenter] Step1 validation errors:', errors);
       this.orderView.showErrors(errors);
       return;
     }
@@ -47,18 +45,14 @@ export class OrderPresenter {
     this.orderModel.setItems(this.basketModel.getItems().map((item) => item.id));
     this.orderModel.setTotal(this.basketModel.getTotalPrice());
 
-    console.log('[OrderPresenter] Starting contactsPresenter');
-
     this.contactsPresenter.start(this.modalContent, this.handleContactsFormSubmit);
   };
 
   private handleContactsFormSubmit = async (contactsData: IOrderForm): Promise<void> => {
-    console.log('[OrderPresenter] handleContactsFormSubmit called', contactsData);
     this.orderModel.setEmail(contactsData.email);
     this.orderModel.setPhone(contactsData.phone);
 
     const errors = this.orderModel.validateStep2();
-    console.log('[OrderPresenter] Step2 validation errors:', errors);
     if (errors.length > 0) {
       this.contactsPresenter.showErrors(errors);
       return;
