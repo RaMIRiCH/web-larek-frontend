@@ -19,10 +19,16 @@ export class OrderPresenter {
     private modalContent: HTMLElement,
     private orderModel: OrderModel,
   ) {
+    this.orderView.onInputChange = this.handleOrderFormInput;
     this.orderView.onFormSubmit = this.handleOrderFormSubmit;
 
     this.successView.setCallbacks({
-      onClose: () => location.reload()
+      onClose: () => {
+        this.successView.close();
+        this.basketModel.clear();
+        this.basketPresenter.updateCounter();
+        this.orderView.close();
+      }
     });
   }
 
@@ -31,19 +37,26 @@ export class OrderPresenter {
     this.orderView.open();
   }
 
+  private handleOrderFormInput = (data: { address: string; payment: string | null }): void => {
+    this.orderModel.setAddress(data.address);
+    this.orderModel.setPayment(data.payment || '');
+
+    const errors = this.orderModel.validateStep1();
+    const isValid = errors.length === 0 && this.basketModel.getItems().length > 0;
+
+    this.orderView.showErrors(errors);
+    this.orderView.updateButtonState(isValid);
+  };
+
   private handleOrderFormSubmit = (formData: IOrderForm): void => {
     this.orderModel.setAddress(formData.address);
     this.orderModel.setPayment(formData.payment);
 
     const errors = this.orderModel.validateStep1();
-
     if (errors.length > 0) {
       this.orderView.showErrors(errors);
       return;
     }
-
-    this.orderModel.setItems(this.basketModel.getItems().map((item) => item.id));
-    this.orderModel.setTotal(this.basketModel.getTotalPrice());
 
     this.contactsPresenter.start(this.modalContent, this.handleContactsFormSubmit);
   };
@@ -58,7 +71,11 @@ export class OrderPresenter {
       return;
     }
 
-    const orderData = this.orderModel.getData();
+    const orderData = {
+      ...this.orderModel.getData(),
+      items: this.basketModel.getItems().map((item) => item.id),
+      total: this.basketModel.getTotalPrice(),
+    };
 
     try {
       await this.api.post('/order', orderData, 'POST');
