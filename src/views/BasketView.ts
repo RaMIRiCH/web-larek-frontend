@@ -1,5 +1,4 @@
 import { Product } from "../models/Product";
-import { openModal, closeModal, clearModalContent } from "./Modal";
 
 export type BasketViewCallbacks = {
   onRemoveItem?: (productId: string) => void;
@@ -7,51 +6,29 @@ export type BasketViewCallbacks = {
 };
 
 export class BasketView {
-  private template: HTMLTemplateElement;
-  private container: HTMLElement;
-  private contentElement: HTMLElement;
-  private element!: HTMLElement;
-  private listElement!: HTMLElement;
-  private totalElement!: HTMLElement;
-  private submitButton!: HTMLButtonElement;
-  private closeButton!: HTMLButtonElement;
+  private element: HTMLElement;
+  private listElement: HTMLElement;
+  private totalElement: HTMLElement;
+  private submitButton: HTMLButtonElement;
+
   private callbacks: BasketViewCallbacks = {};
 
   constructor(template: HTMLTemplateElement) {
-    this.template = template;
-    this.container = document.getElementById('modal-container')!;
-    this.contentElement = this.container.querySelector('.modal__content')!;
-  }
-
-  public render(): void {
-    this.contentElement.innerHTML = '';
-    const content = this.template.content.querySelector('.basket')!.cloneNode(true) as HTMLElement;
-
+    const content = template.content.querySelector('.basket')!.cloneNode(true) as HTMLElement;
     this.element = content;
 
-    this.contentElement.appendChild(content);
-
-    this.listElement = this.contentElement.querySelector('.basket__list')!;
-    this.totalElement = this.contentElement.querySelector('.basket__price')!;
-    this.submitButton = this.contentElement.querySelector('.basket__button') as HTMLButtonElement;
-    this.closeButton = this.container.querySelector('.modal__close') as HTMLButtonElement;
+    this.listElement = this.element.querySelector('.basket__list')!;
+    this.totalElement = this.element.querySelector('.basket__price')!;
+    this.submitButton = this.element.querySelector('.basket__button')!;
 
     this.submitButton.addEventListener('click', () => this.callbacks.onSubmit?.());
-    this.closeButton.addEventListener('click', () => this.close());
   }
 
-  open(): void {
-    openModal(this.element);
+  render(): HTMLElement {
+    return this.element;
   }
 
-  close(): void {
-    closeModal(this.element);
-    clearModalContent(this.element);
-  }
-
-  public renderItems(items: Product[], isOrderAvailable: boolean): void {
-    if (!this.listElement) throw new Error('List element not initialized');
-
+  renderItems(items: Product[], isOrderAvailable: boolean): void {
     this.listElement.innerHTML = '';
 
     if (items.length === 0) {
@@ -78,12 +55,11 @@ export class BasketView {
     this.submitButton.disabled = !isOrderAvailable;
   }
 
-  public updateTotal(price: number | null): void {
-    if (!this.totalElement) throw new Error('Total element not initialized');
+  updateTotal(price: number | null): void {
     this.totalElement.textContent = price === null ? 'Бесценно' : `${price} синапсов`;
   }
 
-  public renderCounter(count: number): void {
+  renderCounter(count: number): void {
     const counter = document.querySelector('.header__basket-counter') as HTMLElement | null;
     if (counter) {
       counter.textContent = String(count);
@@ -91,7 +67,7 @@ export class BasketView {
     }
   }
 
-  public setCallbacks(callbacks: BasketViewCallbacks): void {
+  setCallbacks(callbacks: BasketViewCallbacks): void {
     this.callbacks = callbacks;
   }
 }

@@ -21,6 +21,10 @@ export class BasketModel {
 		return this.items;
 	}
 
+	getItemIds(): string[] {
+		return this.items.map(item => item.id);
+	}
+
 	getTotalPrice(): number | null {
 		if (this.items.length === 0) return 0;
 
@@ -30,9 +34,14 @@ export class BasketModel {
 
 		return this.items.reduce((sum, item) => sum + (item.price ?? 0), 0);
 	}
+
+	canOrder(): boolean {
+    	return this.items.length > 0 && this.items.every(item => item.price !== null);
+  	}
+
 	isEmpty(): boolean {
-    return this.items.length === 0;
-  }
+    	return this.items.length === 0;
+  	}
 
 	hasPricelessItems(): boolean {
 		return this.items.some(item => item.price === null);

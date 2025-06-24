@@ -1,97 +1,75 @@
 import { IOrderForm } from '../types';
-import { openModal, closeModal, clearModalContent } from './Modal';
+
+export type ContactsViewCallbacks = {
+  onInputChange?: () => void;
+  onFormSubmit?: (data: IOrderForm) => void;
+};
 
 export class ContactsView {
-  private template: HTMLTemplateElement;
-  private element!: HTMLElement;
-  private form!: HTMLFormElement;
+  private element!: HTMLFormElement;
   private emailInput!: HTMLInputElement;
   private phoneInput!: HTMLInputElement;
   private nextButton!: HTMLButtonElement;
   private errorsContainer!: HTMLElement;
+  private callbacks: ContactsViewCallbacks = {};
 
-  private formSubmitCallback?: (data: IOrderForm) => void;
+  constructor(private template: HTMLTemplateElement) {}
+
   public onInputChange?: () => void;
+  public onFormSubmit?: (data: IOrderForm) => void;
 
-  constructor(template: HTMLTemplateElement) {
-    this.template = template;
-  }
-
-  render(modalContentContainer: HTMLElement) {
-    modalContentContainer.innerHTML = '';
-
+  public render(): HTMLElement {
     const content = this.template.content.cloneNode(true) as DocumentFragment;
-
-    modalContentContainer.appendChild(content);
-
-    this.element = modalContentContainer.querySelector('form')!;
+    this.element = content.querySelector('form')!;
     this.initElements();
-
     this.updateButtonState(false);
+    return this.element;
   }
 
-  private initElements() {
-    this.form = this.element as HTMLFormElement;
-    this.emailInput = this.form.querySelector('input[name="email"]')!;
-    this.phoneInput = this.form.querySelector('input[name="phone"]')!;
-    this.nextButton = this.form.querySelector('button[type="submit"]')!;
-    this.errorsContainer = this.form.querySelector('.form__errors')!;
+  private initElements(): void {
+    this.emailInput = this.element.querySelector('input[name="email"]')!;
+    this.phoneInput = this.element.querySelector('input[name="phone"]')!;
+    this.nextButton = this.element.querySelector('button[type="submit"]')!;
+    this.errorsContainer = this.element.querySelector('.form__errors')!;
 
-    this.emailInput.addEventListener('input', () => {
-      this.onInputChange?.();
-    });
-
-    this.phoneInput.addEventListener('input', () => {
-      this.onInputChange?.();
-    });
-
-    this.form.addEventListener('submit', this.handleSubmit);
+    this.emailInput.addEventListener('input', () => this.callbacks.onInputChange?.());
+    this.phoneInput.addEventListener('input', () => this.callbacks.onInputChange?.());
+    this.element.addEventListener('submit', this.handleSubmit);
   }
 
-  public showErrors(errors: string[]) {
+  private handleSubmit = (event: Event): void => {
+    event.preventDefault();
+    this.callbacks.onFormSubmit?.(this.formData);
+  };
+
+  public setCallbacks(callbacks: ContactsViewCallbacks): void {
+    this.callbacks = callbacks;
+  }
+
+  public showErrors(errors: string[]): void {
     this.errorsContainer.innerHTML = errors.length > 0
       ? errors.map(e => `<span>${e}</span>`).join('<br>')
       : '';
   }
 
-  public handleSubmit = (e: Event) => {
-    e.preventDefault();
-    if (this.formSubmitCallback) {
-      this.formSubmitCallback(this.formData);
-    }
-  };
+  public updateButtonState(enabled: boolean): void {
+    this.nextButton.disabled = !enabled;
+  }
 
-    open(): void {
-      openModal(this.element);
-    }
-  
-    close(): void {
-      closeModal(this.element);
-      clearModalContent(this.element);
-    }
-
-    get email(): string {
-      return this.emailInput?.value ?? '';
-    }
-
-    get phone(): string {
-      return this.phoneInput?.value ?? '';
-    }
-
-  get formData(): IOrderForm {
+  public get formData(): IOrderForm {
     return {
       address: '',
       payment: '',
-      email: this.emailInput.value,
-      phone: this.phoneInput.value,
+      email: this.emailInput.value.trim(),
+      phone: this.phoneInput.value.trim(),
     };
   }
 
-  updateButtonState(isEnabled: boolean): void {
-    this.nextButton.disabled = !isEnabled;
+  public setEmail(email: string): void {
+    this.emailInput.value = email;
   }
 
-  set onFormSubmit(callback: (data: IOrderForm) => void) {
-    this.formSubmitCallback = callback;
+  public setPhone(phone: string): void {
+    this.phoneInput.value = phone;
   }
 }

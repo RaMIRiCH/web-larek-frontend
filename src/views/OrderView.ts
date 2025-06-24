@@ -1,96 +1,63 @@
 import { IOrderForm } from '../types';
-import { openModal, closeModal, clearModalContent } from './Modal';
 
 export class OrderView {
-  private template: HTMLTemplateElement;
-  private container: HTMLElement;
-  private contentElement: HTMLElement;
-  private element!: HTMLElement;
-  private form!: HTMLFormElement;
-  private addressInput!: HTMLInputElement;
-  private paymentButtons!: HTMLButtonElement[];
-  private nextButton!: HTMLButtonElement;
-  private errorsContainer!: HTMLElement;
+  private element: HTMLFormElement;
+  private addressInput: HTMLInputElement;
+  private paymentButtons: NodeListOf<HTMLButtonElement>;
+  private submitButton: HTMLButtonElement;
+  private errorContainer: HTMLElement;
 
-  public onInputChange?: (data: { address: string; payment: string | null }) => void;
   public onFormSubmit?: (data: IOrderForm) => void;
-
-  private selectedPayment: string | null = null;
+  public onInputChange?: (data: IOrderForm) => void;
 
   constructor(template: HTMLTemplateElement) {
-    this.template = template;
-    this.container = document.getElementById('modal-container')!;
-    this.contentElement = this.container.querySelector('.modal__content')!;
-  }
-
-  render(): void {
-    this.contentElement.innerHTML = '';
-    const content = this.template.content.cloneNode(true) as DocumentFragment;
-    this.contentElement.appendChild(content);
-
-    this.element = this.container;
-    this.form = this.contentElement.querySelector<HTMLFormElement>('form[name="order"]')!;
-    this.addressInput = this.contentElement.querySelector<HTMLInputElement>('input[name="address"]')!;
-    this.paymentButtons = Array.from(
-      this.contentElement.querySelectorAll<HTMLButtonElement>('button[name="card"], button[name="cash"]')
-    );
-    this.nextButton = this.contentElement.querySelector<HTMLButtonElement>('button[type="submit"]')!;
-    this.errorsContainer = this.contentElement.querySelector<HTMLElement>('.form__errors')!;
+    const fragment = template.content.cloneNode(true) as DocumentFragment;
+    this.element = fragment.querySelector('form')!;
+    this.addressInput = this.element.querySelector('input[name="address"]')!;
+    this.paymentButtons = this.element.querySelectorAll('.button_alt');
+    this.submitButton = this.element.querySelector('button[type="submit"]')!;
+    this.errorContainer = this.element.querySelector('.form__errors')!;
 
     this.initListeners();
   }
 
-  private initListeners(): void {
-    this.paymentButtons.forEach((btn) =>
+  private initListeners() {
+    this.paymentButtons.forEach(btn => {
       btn.addEventListener('click', () => {
-        this.selectedPayment = btn.name;
-        this.updatePaymentButtons();
-        this.emitInputChange();
-      })
-    );
-
-    this.addressInput.addEventListener('input', () => this.emitInputChange());
-
-    this.form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.onFormSubmit?.({
-        address: this.addressInput.value,
-        payment: this.selectedPayment!,
-        email: '',
-        phone: '',
+        this.paymentButtons.forEach(b => b.classList.toggle('button_alt-active', b === btn));
+        this.onInputChange?.(this.formData);
       });
     });
 
-    this.container.querySelector('.modal__close')?.addEventListener('click', () => this.close());
+    this.addressInput.addEventListener('input', () => {
+      this.onInputChange?.(this.formData);
+    });
+
+    this.element.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.onFormSubmit?.(this.formData);
+    });
   }
 
-  private emitInputChange(): void {
-    this.onInputChange?.({
+  get formData(): IOrderForm {
+    const selectedButton = [...this.paymentButtons].find(b => b.classList.contains('button_alt-active'));
+    return {
       address: this.addressInput.value,
-      payment: this.selectedPayment,
-    });
-  }
-
-  private updatePaymentButtons(): void {
-    this.paymentButtons.forEach((btn) => {
-      btn.classList.toggle('button_alt-active', btn.name === this.selectedPayment);
-    });
-  }
-
-  public showErrors(errors: string[]): void {
-    this.errorsContainer.innerHTML = errors.map((e) => `<span>${e}</span>`).join('<br>');
+      payment: selectedButton?.getAttribute('name') || '',
+      email: '',
+      phone: '',
+    };
   }
 
   public updateButtonState(enabled: boolean): void {
-    this.nextButton.disabled = !enabled;
+    this.submitButton.disabled = !enabled;
   }
 
-  public open(): void {
-    openModal(this.element);
+  public showErrors(errors: string[]): void {
+    this.errorContainer.innerHTML = errors.map(e => `<span>${e}</span>`).join('<br>');
   }
 
-  public close(): void {
-    closeModal(this.element);
-    clearModalContent(this.element);
+  public render(): HTMLElement {
+    return this.element;
   }
 }
