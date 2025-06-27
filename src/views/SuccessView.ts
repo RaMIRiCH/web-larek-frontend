@@ -1,27 +1,23 @@
 export class SuccessView {
   private element: HTMLElement;
+  private descriptionElement: HTMLElement;
+  private closeButton: HTMLButtonElement;
 
-  constructor(private template: HTMLTemplateElement) {
+  constructor(template: HTMLTemplateElement) {
     const content = template.content.cloneNode(true) as DocumentFragment;
     this.element = content.firstElementChild as HTMLElement;
+
+    this.descriptionElement = this.element.querySelector('.order-success__description')!;
+    this.closeButton = this.element.querySelector('.order-success__close')!;
+
+    this.closeButton.addEventListener('click', () => {
+      const event = new CustomEvent('modal:close');
+      document.dispatchEvent(event);
+    });
   }
 
   public render(total: number): HTMLElement {
-    const clone = this.element.cloneNode(true) as HTMLElement;
-
-    const description = clone.querySelector('.order-success__description');
-    if (description) {
-      description.textContent = `Списано ${total} синапсов`;
-    }
-
-    const closeButton = clone.querySelector('.order-success__close');
-    if (closeButton) {
-      closeButton.addEventListener('click', () => {
-        const event = new CustomEvent('modal:close');
-        document.dispatchEvent(event);
-      });
-    }
-
-    return clone;
+    this.descriptionElement.textContent = `Списано ${total} синапсов`;
+    return this.element;
   }
 }

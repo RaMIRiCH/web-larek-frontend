@@ -2,7 +2,9 @@
 import './scss/styles.scss';
 import { Api } from './components/base/api';
 import { CatalogView } from './views/CatalogView';
+import { ProductCardView } from './views/ProductCardView';
 import { BasketView } from './views/BasketView';
+import { BasketItemView } from './views/BasketItemView';
 import { OrderView } from './views/OrderView';
 import { ContactsView } from './views/ContactsView';
 import { BasketModel } from './models/Basket';
@@ -40,12 +42,34 @@ function updateBasketView() {
   const items = basketModel.getItems();
   const total = basketModel.getTotalPrice();
   basketView.render();
-  basketView.renderItems(items, basketModel.canOrder());
   basketView.updateTotal(total);
   basketView.renderCounter(items.length);
+
+  if (items.length === 0) {
+    const emptyMessage = document.createElement('li');
+    emptyMessage.textContent = 'Корзина пуста';
+    emptyMessage.className = 'basket__item basket__empty-message';
+    basketView.setItems([emptyMessage]);
+    basketView.setSubmitEnabled(false);
+  } else {
+    const itemTemplate = document.getElementById('card-basket') as HTMLTemplateElement;
+    const views = items.map((product, index) => {
+      const itemView = new BasketItemView(itemTemplate);
+      itemView.setCallbacks({
+        onRemove: (id) => {
+          basketModel.removeItem(id);
+          updateBasketView();
+        }
+      });
+      return itemView.render(product, index);
+    });
+    basketView.setItems(views);
+    basketView.setSubmitEnabled(true);
+  }
 }
 
 // Каталог
+const catalogTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
 const catalogView = new CatalogView(catalogContainer);
 
 api.get('/product/').then((res) => {
@@ -58,28 +82,29 @@ api.get('/product/').then((res) => {
     p.price ?? null
   ));
 
-  catalogView.renderItems(products, (productId) => {
-    api.getProductById(productId).then(data => {
-      const product = new Product(
-        data.id,
-        data.title,
-        data.description,
-        data.image,
-        data.category,
-        data.price
-      );
-      const productModalTemplate = document.getElementById('card-preview') as HTMLTemplateElement;
-      const productModalView = new ProductModalView(productModalTemplate);
-      productModalView.setCallbacks({
-        onAddToBasket: (id) => {
-          basketModel.addItem(product);
-          updateBasketView();
-          modalManager.close();
-        }
-      });
-      modalManager.setContent(productModalView.render(product));
+  const cardViews = products.map(product => {
+    const cardView = new ProductCardView(catalogTemplate);
+    cardView.setCallbacks({
+      onClick: () => {
+        const productModalTemplate = document.getElementById('card-preview') as HTMLTemplateElement;
+        const productModalView = new ProductModalView(productModalTemplate);
+
+        productModalView.setCallbacks({
+          onAddToBasket: () => {
+            basketModel.addItem(product);
+            updateBasketView();
+            modalManager.close();
+          }
+        });
+
+        modalManager.setContent(productModalView.render(product));
+      }
     });
+
+    return cardView.render(product);
   });
+
+  catalogView.setItems(cardViews);
 });
 
 // Формы заказов
