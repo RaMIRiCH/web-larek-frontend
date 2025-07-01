@@ -15,7 +15,6 @@ export class OrderView {
     const fragment = template.content.cloneNode(true) as DocumentFragment;
     this.element = fragment.querySelector('form')!;
 
-    // Инициализируем элементы
     this.addressInput = this.element.querySelector('input[name="address"]')!;
     this.paymentButtons = this.element.querySelectorAll('.button_alt');
     this.submitButton = this.element.querySelector('button[type="submit"]')!;

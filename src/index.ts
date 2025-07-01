@@ -66,28 +66,28 @@ function updateBasketView(): void {
   basketView.setItems(views);
 }
 
-  api.get('/product/').then((res) => {
-    const items = (res as ApiListResponse<IProduct>).items;
-    catalogModel.setProducts(items);
+api.get('/product/').then((res) => {
+  const items = (res as ApiListResponse<IProduct>).items;
+  catalogModel.setProducts(items);
+});
+
+eventEmitter.on('catalog:changed', (products: Product[]) => {
+  const views = products.map(product => {
+    const cardView = new ProductCardView(catalogTemplate, eventEmitter);
+    cardView.updateContent(product);
+    return cardView.render();
   });
 
-  eventEmitter.on('catalog:changed', (products: Product[]) => {
-    const views = products.map(product => {
-      const cardView = new ProductCardView(catalogTemplate, eventEmitter);
-      cardView.updateContent(product);
-      return cardView.render();
-    });
+  catalogView.setItems(views);
+});
 
-    catalogView.setItems(views);
-  });
-
-  eventEmitter.on('product:open', (product: Product) => {
+eventEmitter.on('product:open', (product: Product) => {
     const modalView = new ProductModalView(productModalTemplate, eventEmitter);
     modalView.updateContent(product);
     modalManager.setContent(modalView.render());
   });
 
-  eventEmitter.on('basket:add', (product: Product) => {
+eventEmitter.on('basket:add', (product: Product) => {
     basketModel.addItem(product);
     updateBasketView();
   });

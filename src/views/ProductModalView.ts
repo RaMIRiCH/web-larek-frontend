@@ -45,7 +45,6 @@ export class ProductModalView {
     this.imageElem.src = `${CDN_URL}${product.image}`;
     this.imageElem.alt = product.title;
 
-    // 🔧 вот это добавляем
     this.categoryElem.textContent = product.category;
     this.categoryElem.className = `card__category card__category_${product.categoryModifier}`;
   }
