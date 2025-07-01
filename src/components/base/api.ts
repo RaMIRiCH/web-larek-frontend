@@ -41,8 +41,4 @@ export class Api {
             body: JSON.stringify(data)
         }).then(this.handleResponse);
     }
-
-    getProductById(productId: string): Promise<IProduct> {
-        return this.get(`/product/${productId}`) as Promise<IProduct>;
-    }
 }

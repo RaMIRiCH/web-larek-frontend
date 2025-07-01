@@ -1,9 +1,14 @@
+import { EventEmitter } from '../components/base/events';
+
 export class SuccessView {
   private element: HTMLElement;
   private descriptionElement: HTMLElement;
   private closeButton: HTMLButtonElement;
 
-  constructor(template: HTMLTemplateElement) {
+  constructor(
+    template: HTMLTemplateElement,
+    private eventEmitter: EventEmitter
+  ) {
     const content = template.content.cloneNode(true) as DocumentFragment;
     this.element = content.firstElementChild as HTMLElement;
 
@@ -11,8 +16,7 @@ export class SuccessView {
     this.closeButton = this.element.querySelector('.order-success__close')!;
 
     this.closeButton.addEventListener('click', () => {
-      const event = new CustomEvent('modal:close');
-      document.dispatchEvent(event);
+      this.eventEmitter.emit('modal:close');
     });
   }
 

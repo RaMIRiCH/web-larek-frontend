@@ -1,4 +1,5 @@
 import { IOrderForm } from '../types';
+import { EventEmitter } from '../components/base/events';
 
 export class OrderView {
   private element: HTMLFormElement;
@@ -7,12 +8,14 @@ export class OrderView {
   private submitButton: HTMLButtonElement;
   private errorContainer: HTMLElement;
 
-  public onFormSubmit?: (data: IOrderForm) => void;
-  public onInputChange?: (data: IOrderForm) => void;
-
-  constructor(template: HTMLTemplateElement) {
+  constructor(
+    private template: HTMLTemplateElement,
+    private eventEmitter: EventEmitter
+  ) {
     const fragment = template.content.cloneNode(true) as DocumentFragment;
     this.element = fragment.querySelector('form')!;
+
+    // Инициализируем элементы
     this.addressInput = this.element.querySelector('input[name="address"]')!;
     this.paymentButtons = this.element.querySelectorAll('.button_alt');
     this.submitButton = this.element.querySelector('button[type="submit"]')!;
@@ -21,31 +24,35 @@ export class OrderView {
     this.initListeners();
   }
 
-  private initListeners() {
-    this.paymentButtons.forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.paymentButtons.forEach(b => b.classList.toggle('button_alt-active', b === btn));
-        this.onInputChange?.(this.formData);
-      });
+  private initListeners(): void {
+    this.element.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.eventEmitter.emit('order:step1:submit');
     });
 
     this.addressInput.addEventListener('input', () => {
-      this.onInputChange?.(this.formData);
+      this.eventEmitter.emit('order:step1:update', this.formData);
     });
 
-    this.element.addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.onFormSubmit?.(this.formData);
+    this.paymentButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        this.paymentButtons.forEach(b =>
+          b.classList.toggle('button_alt-active', b === btn)
+        );
+        this.eventEmitter.emit('order:step1:update', this.formData);
+      });
     });
   }
 
-  get formData(): IOrderForm {
-    const selectedButton = [...this.paymentButtons].find(b => b.classList.contains('button_alt-active'));
+  public get formData(): IOrderForm {
+    const selected = Array.from(this.paymentButtons).find(b =>
+      b.classList.contains('button_alt-active')
+    );
     return {
-      address: this.addressInput.value,
-      payment: selectedButton?.getAttribute('name') || '',
+      address: this.addressInput.value.trim(),
+      payment: selected?.getAttribute('name') || '',
       email: '',
-      phone: '',
+      phone: ''
     };
   }
 
@@ -54,7 +61,9 @@ export class OrderView {
   }
 
   public showErrors(errors: string[]): void {
-    this.errorContainer.innerHTML = errors.map(e => `<span>${e}</span>`).join('<br>');
+    this.errorContainer.innerHTML = errors
+      .map(e => `<span>${e}</span>`)
+      .join('<br>');
   }
 
   public render(): HTMLElement {

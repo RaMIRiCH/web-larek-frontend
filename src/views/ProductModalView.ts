@@ -1,49 +1,56 @@
-/* eslint-disable @typescript-eslint/no-inferrable-types */
 import { Product } from '../models/Product';
 import { CDN_URL } from '../utils/constants';
-
-export type ProductModalViewCallbacks = {
-  onAddToBasket?: (productId: string) => void;
-};
+import { EventEmitter } from '../components/base/events';
+import { modalManager } from '../components/ModalManager';
 
 export class ProductModalView {
-  private element: HTMLElement;
-  private addButton: HTMLButtonElement;
-  private callbacks: ProductModalViewCallbacks = {};
-  private currentProductId: string = '';
+  private container: HTMLElement;
+  private titleElem: HTMLElement;
+  private descriptionElem: HTMLElement;
+  private priceElem: HTMLElement;
+  private imageElem: HTMLImageElement;
+  private categoryElem: HTMLElement;
+  private addButton: HTMLElement;
 
-  constructor(template: HTMLTemplateElement) {
-    const content = template.content.querySelector('.card')!.cloneNode(true) as HTMLElement;
-    this.element = content;
+  private currentProduct: Product | null = null;
 
-    this.addButton = this.element.querySelector('.button')!;
+  constructor(
+    private template: HTMLTemplateElement,
+    private eventEmitter: EventEmitter
+  ) {
+    const fragment = template.content.cloneNode(true) as DocumentFragment;
+    this.container = fragment.firstElementChild as HTMLElement;
+
+    this.titleElem = this.container.querySelector('.card__title')!;
+    this.descriptionElem = this.container.querySelector('.card__text')!;
+    this.priceElem = this.container.querySelector('.card__price')!;
+    this.imageElem = this.container.querySelector('.card__image')!;
+    this.addButton = this.container.querySelector('.card__button')!;
+    this.categoryElem = this.container.querySelector('.card__category')!;
+
     this.addButton.addEventListener('click', () => {
-      if (this.currentProductId) {
-        this.callbacks.onAddToBasket?.(this.currentProductId);
+      if (this.currentProduct) {
+        this.eventEmitter.emit('basket:add', this.currentProduct);
+        modalManager.close();
       }
     });
   }
 
-  render(product: Product): HTMLElement {
-    this.currentProductId = product.id;
+  public updateContent(product: Product): void {
+    this.currentProduct = product;
 
-    const img = this.element.querySelector('.card__image')!;
-    img.setAttribute('src', `${CDN_URL}${product.image}`);
-    img.setAttribute('alt', product.title);
+    this.titleElem.textContent = product.title;
+    this.descriptionElem.textContent = product.description;
+    this.priceElem.textContent = product.formattedPrice;
+    this.imageElem.src = `${CDN_URL}${product.image}`;
+    this.imageElem.alt = product.title;
 
-    this.element.querySelector('.card__title')!.textContent = product.title;
-    this.element.querySelector('.card__text')!.textContent = product.description;
-    this.element.querySelector('.card__price')!.textContent = product.formattedPrice;
-
-    const categoryEl = this.element.querySelector('.card__category')!;
-    categoryEl.textContent = product.category;
-    categoryEl.className = 'card__category';
-    categoryEl.classList.add(`card__category_${product.categoryModifier}`);
-
-    return this.element;
+    // 🔧 вот это добавляем
+    this.categoryElem.textContent = product.category;
+    this.categoryElem.className = `card__category card__category_${product.categoryModifier}`;
   }
 
-  setCallbacks(callbacks: ProductModalViewCallbacks): void {
-    this.callbacks = callbacks;
+  public render(): HTMLElement {
+    return this.container;
   }
 }

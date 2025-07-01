@@ -1,7 +1,4 @@
-export type BasketViewCallbacks = {
-  onRemoveItem?: (productId: string) => void;
-  onSubmit?: () => void;
-};
+import { EventEmitter } from '../components/base/events';
 
 export class BasketView {
   private element: HTMLElement;
@@ -9,44 +6,44 @@ export class BasketView {
   private totalElement: HTMLElement;
   private counterElement: HTMLElement;
   private submitButton: HTMLButtonElement;
-  private callbacks: BasketViewCallbacks = {};
 
-  constructor(template: HTMLTemplateElement) {
+  constructor(
+    template: HTMLTemplateElement,
+    private eventEmitter: EventEmitter
+  ) {
     this.element = template.content.querySelector('.basket')!.cloneNode(true) as HTMLElement;
     this.listElement = this.element.querySelector('.basket__list')!;
     this.totalElement = this.element.querySelector('.basket__price')!;
     this.counterElement = document.querySelector('.header__basket-counter')!;
     this.submitButton = this.element.querySelector('.basket__button')!;
 
-    this.submitButton.addEventListener('click', () => this.callbacks.onSubmit?.());
-  }
-
-  setCallbacks(callbacks: BasketViewCallbacks): void {
-    this.callbacks = callbacks;
-  }
-
-  setItems(elements: HTMLElement[]) {
-    this.listElement.replaceChildren(...elements);
+    this.submitButton.addEventListener('click', () => {
+      this.eventEmitter.emit('order:start');
+    });
   }
 
   render(): HTMLElement {
     return this.element;
   }
 
-  public setList(items: HTMLElement[]): void {
-    this.listElement.replaceChildren(...items);
+  public setItems(elements: HTMLElement[]): void {
+    this.listElement.replaceChildren(...elements);
   }
 
-  public updateTotal(total: number): void {
+  public updateTotal(total: number | null): void {
+  if (total === null) {
+    this.totalElement.textContent = 'Бесценно';
+  } else {
     this.totalElement.textContent = `${total} синапсов`;
   }
+}
 
   public renderCounter(count: number): void {
     this.counterElement.textContent = String(count);
+    this.counterElement.classList.toggle('hidden', count === 0);
   }
 
   public setSubmitEnabled(enabled: boolean): void {
     this.submitButton.disabled = !enabled;
   }
 }
-

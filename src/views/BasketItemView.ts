@@ -1,31 +1,47 @@
+import { EventEmitter } from '../components/base/events';
 import { Product } from '../models/Product';
 
-export type BasketItemViewCallbacks = {
-  onRemove?: (id: string) => void;
-};
-
 export class BasketItemView {
-  private element: HTMLElement;
-  private callbacks: BasketItemViewCallbacks = {};
+  private container: HTMLElement;
+  private indexElem: HTMLElement;
+  private titleElem: HTMLElement;
+  private priceElem: HTMLElement;
+  private removeButton: HTMLButtonElement;
 
-  constructor(private template: HTMLTemplateElement) {
-    this.element = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
-  }
+  constructor(
+    private template: HTMLTemplateElement,
+    private eventEmitter: EventEmitter
+  ) {
+    // Клонируем шаблон и сохраняем корневой контейнер
+    this.container = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
 
-  render(product: Product, index: number): HTMLElement {
-    this.element.querySelector('.basket__item-index')!.textContent = String(index + 1);
-    this.element.querySelector('.card__title')!.textContent = product.title;
-    this.element.querySelector('.card__price')!.textContent = product.formattedPrice;
+    // Находим DOM-узлы и сохраняем их
+    this.indexElem = this.container.querySelector('.basket__item-index')!;
+    this.titleElem = this.container.querySelector('.card__title')!;
+    this.priceElem = this.container.querySelector('.card__price')!;
+    this.removeButton = this.container.querySelector('.basket__item-delete')!;
 
-    const deleteBtn = this.element.querySelector('.basket__item-delete') as HTMLButtonElement;
-    deleteBtn.addEventListener('click', () => {
-      this.callbacks.onRemove?.(product.id);
+    // Подписываемся на клик удаления
+    this.removeButton.addEventListener('click', () => {
+      // В emit передаем id продукта, который будет передан при вызове updateContent
+      if (this.currentProduct) {
+        this.eventEmitter.emit('basket:remove', { productId: this.currentProduct.id });
+      }
     });
-
-    return this.element;
   }
 
-  setCallbacks(callbacks: BasketItemViewCallbacks) {
-    this.callbacks = callbacks;
+  private currentProduct: Product | null = null;
+
+  // Метод обновляет содержимое в DOM
+  public updateContent(product: Product, index: number): void {
+    this.currentProduct = product;
+
+    this.indexElem.textContent = String(index + 1);
+    this.titleElem.textContent = product.title;
+    this.priceElem.textContent = product.formattedPrice;
+  }
+
+  public render(): HTMLElement {
+    return this.container;
   }
 }

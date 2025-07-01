@@ -1,40 +1,41 @@
 import { Product } from '../models/Product';
 import { CDN_URL } from '../utils/constants';
-
-export type ProductCardViewCallbacks = {
-  onClick?: (id: string) => void;
-};
+import { EventEmitter } from '../components/base/events';
 
 export class ProductCardView {
-  private element: HTMLElement;
-  private callbacks: ProductCardViewCallbacks = {};
+  private container: HTMLElement;
+  private categoryElem: HTMLElement;
+  private titleElem: HTMLElement;
+  private priceElem: HTMLElement;
+  private imageElem: HTMLImageElement;
 
-  constructor(private template: HTMLTemplateElement) {
-    this.element = this.template.content.querySelector('.card')!.cloneNode(true) as HTMLElement;
+  constructor(
+    private template: HTMLTemplateElement,
+    private eventEmitter: EventEmitter
+  ) {
+    const fragment = this.template.content.cloneNode(true) as DocumentFragment;
+    this.container = fragment.firstElementChild as HTMLElement;
+
+    this.categoryElem = this.container.querySelector('.card__category')!;
+    this.titleElem = this.container.querySelector('.card__title')!;
+    this.priceElem = this.container.querySelector('.card__price')!;
+    this.imageElem = this.container.querySelector('.card__image')!;
   }
 
-  setCallbacks(callbacks: ProductCardViewCallbacks): void {
-    this.callbacks = callbacks;
+  public updateContent(product: Product): void {
+    this.categoryElem.textContent = product.category;
+    this.categoryElem.className = `card__category card__category_${product.categoryModifier}`;
+    this.titleElem.textContent = product.title;
+    this.priceElem.textContent = product.formattedPrice;
+    this.imageElem.src = `${CDN_URL}${product.image}`;
+    this.imageElem.alt = product.title;
+
+    this.container.onclick = () => {
+      this.eventEmitter.emit('product:open', product);
+    };
   }
 
-  render(product: Product): HTMLElement {
-    this.element.querySelector('.card__title')!.textContent = product.title;
-
-    const categoryElem = this.element.querySelector('.card__category')!;
-    categoryElem.textContent = product.category;
-    categoryElem.className = `card__category card__category_${product.categoryModifier}`;
-
-    const priceElem = this.element.querySelector('.card__price')!;
-    priceElem.textContent = product.formattedPrice;
-
-    const imageElem = this.element.querySelector('.card__image') as HTMLImageElement;
-    imageElem.src = `${CDN_URL}${product.image}`;
-    imageElem.alt = product.title;
-
-    this.element.addEventListener('click', () => {
-      this.callbacks.onClick?.(product.id);
-    });
-
-    return this.element;
+  public render(): HTMLElement {
+    return this.container;
   }
 }
