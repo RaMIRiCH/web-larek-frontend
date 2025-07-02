@@ -28,6 +28,7 @@ const catalogContainer = document.querySelector('.gallery') as HTMLElement;
 const productModalTemplate = document.getElementById('card-preview') as HTMLTemplateElement;
 const catalogTemplate = document.querySelector('#card-catalog') as HTMLTemplateElement;
 const basketTemplate = document.querySelector('#basket') as HTMLTemplateElement;
+const template = document.getElementById('card-basket') as HTMLTemplateElement;
 const successTemplate = document.getElementById('success') as HTMLTemplateElement;
 const orderTemplate = document.getElementById('order') as HTMLTemplateElement;
 const contactsTemplate = document.getElementById('contacts') as HTMLTemplateElement;
@@ -37,6 +38,7 @@ const catalogModel = new CatalogModel(eventEmitter);
 const basketView = new BasketView(basketTemplate, eventEmitter);
 const successView = new SuccessView(successTemplate, eventEmitter);
 const orderView = new OrderView(orderTemplate, eventEmitter);
+const contactsView = new ContactsView(contactsTemplate, eventEmitter);
 
 new PageView(eventEmitter);
 
@@ -46,24 +48,13 @@ function updateBasketView(): void {
 
   basketView.updateTotal(total);
   basketView.renderCounter(items.length);
-  basketView.setSubmitEnabled(basketModel.canOrder());
 
-  if (items.length === 0) {
-    const emptyMessage = document.createElement('li');
-    emptyMessage.textContent = 'Корзина пуста';
-    emptyMessage.className = 'basket__item basket__empty-message';
-    basketView.setItems([emptyMessage]);
-    basketView.setSubmitEnabled(false);
-    return;
-  }
-
-  const template = document.getElementById('card-basket') as HTMLTemplateElement;
   const views = items.map((item, index) => {
     const view = new BasketItemView(template, eventEmitter);
     view.updateContent(item, index);
     return view.render();
   });
-  basketView.setItems(views);
+  basketView.setItemsOrEmpty(views);
 }
 
 api.get('/product/').then((res) => {
@@ -82,18 +73,22 @@ eventEmitter.on('catalog:changed', (products: Product[]) => {
 });
 
 eventEmitter.on('product:open', (product: Product) => {
-    const modalView = new ProductModalView(productModalTemplate, eventEmitter);
-    modalView.updateContent(product);
-    modalManager.setContent(modalView.render());
-  });
+  const modalView = new ProductModalView(productModalTemplate, eventEmitter);
+  modalView.updateContent(product);
+
+  const isAvailable = product.price !== null && !basketModel.contains(product.id);
+  modalView.setAddButtonEnabled(isAvailable);
+
+  modalManager.setContent(modalView.render());
+});
+
 
 eventEmitter.on('basket:add', (product: Product) => {
     basketModel.addItem(product);
     updateBasketView();
-  });
+});
 
 eventEmitter.on('basket:open', () => {
-  updateBasketView();
   modalManager.setContent(basketView.render());
 });
 
@@ -126,24 +121,23 @@ eventEmitter.on('order:step1:submit', () => {
     return;
   }
 
-  const contactsView = new ContactsView(contactsTemplate, eventEmitter);
   modalManager.setContent(contactsView.render());
+});
 
-  eventEmitter.on('order:step2:update', (data: { email: string; phone: string }) => {
-    orderModel.setEmail(data.email);
-    orderModel.setPhone(data.phone);
+eventEmitter.on('order:step2:update', (data: { email: string; phone: string }) => {
+  orderModel.setEmail(data.email);
+  orderModel.setPhone(data.phone);
 
-    const errors = orderModel.validateStep2();
-    const canSubmit = errors.length === 0 && basketModel.canOrder();
+  const errors = orderModel.validateStep2();
+  const canSubmit = errors.length === 0 && basketModel.canOrder();
 
-    contactsView.showErrors(errors);
-    contactsView.updateButtonState(canSubmit);
-  });
+  contactsView.showErrors(errors);
+  contactsView.updateButtonState(canSubmit);
+});
 
-  eventEmitter.on('order:step2:validate', ({ errors, canSubmit }: { errors: string[]; canSubmit: boolean }) => {
-    contactsView.showErrors(errors);
-    contactsView.updateButtonState(canSubmit);
-  });
+ eventEmitter.on('order:step2:validate', ({ errors, canSubmit }: { errors: string[]; canSubmit: boolean }) => {
+  contactsView.showErrors(errors);
+  contactsView.updateButtonState(canSubmit);
 });
 
 eventEmitter.on('order:submit', async () => {

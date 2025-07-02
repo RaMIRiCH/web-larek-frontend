@@ -10,7 +10,7 @@ export class ProductModalView {
   private priceElem: HTMLElement;
   private imageElem: HTMLImageElement;
   private categoryElem: HTMLElement;
-  private addButton: HTMLElement;
+  private addButton: HTMLButtonElement;
 
   private currentProduct: Product | null = null;
 
@@ -52,4 +52,9 @@ export class ProductModalView {
   public render(): HTMLElement {
     return this.container;
   }
+
+  public setAddButtonEnabled(enabled: boolean): void {
+    this.addButton.disabled = !enabled;
+  }
+
 }

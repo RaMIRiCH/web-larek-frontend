@@ -30,6 +30,19 @@ export class BasketView {
     this.listElement.replaceChildren(...elements);
   }
 
+  public setItemsOrEmpty(items: HTMLElement[]): void {
+    if (items.length === 0) {
+      const emptyMessage = document.createElement('li');
+      emptyMessage.textContent = 'Корзина пуста';
+      emptyMessage.className = 'basket__item basket__empty-message';
+      this.setItems([emptyMessage]);
+      this.setSubmitEnabled(false);
+    } else {
+      this.setItems(items);
+      this.setSubmitEnabled(true);
+    }
+  }
+
   public updateTotal(total: number | null): void {
   if (total === null) {
     this.totalElement.textContent = 'Бесценно';

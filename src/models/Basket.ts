@@ -50,4 +50,8 @@ export class BasketModel {
 	isOrderAvailable(): boolean {
 		return !this.isEmpty() && !this.hasPricelessItems();
 	}
+
+	public contains(productId: string): boolean {
+		return this.items.some(item => item.id === productId);
+	}
 }
